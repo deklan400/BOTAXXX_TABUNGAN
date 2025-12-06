@@ -9,7 +9,7 @@ from app.db.session import get_db
 router = APIRouter()
 
 # REGISTER
-@router.post("/register", response_model=dict)
+@router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
@@ -26,23 +26,28 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
     return {"message": "Registered successfully"}
 
-# LOGIN EMAIL/PASSWORD
+# LOGIN EMAIL / PASSWORD
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
-    if not user or not verify_password(data.password, user.password_hash or ""):
+
+    if not user or not user.password_hash:
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    if not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)
 
-# TELEGRAM LOGIN
+
+# LOGIN VIA TELEGRAM BOT
 @router.post("/telegram-login", response_model=TokenResponse)
 def telegram_login(data: TelegramLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.telegram_id == data.telegram_id).first()
+
     if not user:
         raise HTTPException(status_code=404, detail="Telegram ID not registered")
 
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)
-
