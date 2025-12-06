@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
-
 from app.db.base import Base
 
 class User(Base):
@@ -15,4 +14,3 @@ class User(Base):
     telegram_id = Column(String, unique=True, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-
