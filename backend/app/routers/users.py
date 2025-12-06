@@ -2,42 +2,46 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.schemas.user import UserBase, UpdateUserRequest, UpdateTelegramIDRequest
-from app.db.session import get_db
-from app.models.user import User
 from app.utils.jwt import get_current_user
+from app.models.user import User
+from app.db.session import get_db
 
 router = APIRouter()
 
+# GET PROFILE
 @router.get("/me", response_model=UserBase)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_profile(user: User = Depends(get_current_user)):
+    return user
 
+# UPDATE PROFILE
 @router.put("/me", response_model=UserBase)
-def update_me(data: UpdateUserRequest,
-              db: Session = Depends(get_db),
-              current_user: User = Depends(get_current_user)):
-
+def update_profile(
+    data: UpdateUserRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     if data.name:
-        current_user.name = data.name
+        user.name = data.name
 
     if data.avatar_url:
-        current_user.avatar_url = data.avatar_url
+        user.avatar_url = data.avatar_url
 
     db.commit()
-    db.refresh(current_user)
-    return current_user
+    db.refresh(user)
+    return user
 
+# UPDATE TELEGRAM ID
 @router.put("/me/telegram-id")
-def update_telegram(data: UpdateTelegramIDRequest,
-                    db: Session = Depends(get_db),
-                    current_user: User = Depends(get_current_user)):
-    
-    # Cek kalau Telegram ID sudah dipakai user lain
+def update_telegram(
+    data: UpdateTelegramIDRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     existing = db.query(User).filter(User.telegram_id == data.telegram_id).first()
-    if existing and existing.id != current_user.id:
+
+    if existing and existing.id != user.id:
         raise HTTPException(status_code=400, detail="Telegram ID already used")
 
-    current_user.telegram_id = data.telegram_id
+    user.telegram_id = data.telegram_id
     db.commit()
     return {"success": True, "telegram_id": data.telegram_id}
-
