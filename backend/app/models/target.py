@@ -17,4 +17,3 @@ class Target(Base):
     note = Column(String)
 
     user = relationship("User")
-
