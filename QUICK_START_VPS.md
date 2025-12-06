@@ -92,7 +92,11 @@ sudo apt install -y curl wget git build-essential
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update
 sudo apt install -y python3.11 python3.11-venv python3.11-dev
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Install pip (handle Debian pip issue)
+python3.11 -m ensurepip --upgrade --break-system-packages 2>/dev/null || \
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 --break-system-packages || \
+echo "Using system pip"
 
 # Install Node.js 18
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -

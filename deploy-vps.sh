@@ -135,7 +135,15 @@ print_info "Step 10: Setting up backend..."
 cd $APP_DIR/backend
 python3.11 -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
+
+# Upgrade pip (handle Debian pip issue)
+print_info "Upgrading pip..."
+python3.11 -m pip install --upgrade pip --break-system-packages 2>/dev/null || \
+python3.11 -m pip install --upgrade pip --user 2>/dev/null || \
+print_warning "Skipping pip upgrade, using existing version"
+
+# Install requirements
+print_info "Installing backend dependencies..."
 pip install -r requirements.txt
 
 # Generate SECRET_KEY
@@ -191,7 +199,15 @@ print_info "Step 12: Setting up bot..."
 cd $APP_DIR/bot
 python3.11 -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
+
+# Upgrade pip (handle Debian pip issue)
+print_info "Upgrading pip..."
+python3.11 -m pip install --upgrade pip --break-system-packages 2>/dev/null || \
+python3.11 -m pip install --upgrade pip --user 2>/dev/null || \
+print_warning "Skipping pip upgrade, using existing version"
+
+# Install requirements
+print_info "Installing bot dependencies..."
 pip install -r requirements.txt
 
 # Create .env file (user needs to add TELEGRAM_BOT_TOKEN)
