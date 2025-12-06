@@ -19,3 +19,14 @@ class Loan(Base):
 
     payments = relationship("LoanPayment", back_populates="loan")
 
+class LoanPayment(Base):
+    __tablename__ = "loan_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, ForeignKey("loans.id"))
+    date = Column(Date)
+    amount = Column(Float)
+    note = Column(String)
+
+    loan = relationship("Loan", back_populates="payments")
+
