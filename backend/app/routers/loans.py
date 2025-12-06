@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import List, Optional
 
 from app.db.session import get_db
 from app.utils.jwt import get_current_user
-from app.models.loan import Loan, LoanPayment
 from app.schemas.loan import (
     LoanBase,
     LoanCreateRequest,
@@ -12,103 +11,141 @@ from app.schemas.loan import (
     LoanPaymentCreateRequest,
     LoanPaymentBase,
 )
+from app.services.loans_service import (
+    create_loan,
+    get_loans,
+    get_loan_by_id,
+    update_loan,
+    delete_loan,
+    add_payment,
+    get_payments,
+)
+from app.core.logging_config import app_logger
 
 router = APIRouter()
 
 
-def _calc_remaining_amount(db: Session, loan: Loan) -> float:
-    total_paid = db.query(func.sum(LoanPayment.amount)).filter(
-        LoanPayment.loan_id == loan.id
-    ).scalar() or 0
-    remaining = max(loan.principal - total_paid, 0)
-    return remaining
-
-
-def _loan_to_schema(db: Session, loan: Loan) -> LoanBase:
-    remaining = _calc_remaining_amount(db, loan)
-    payments = [
-        LoanPaymentBase.from_orm(p)
-        for p in sorted(loan.payments, key=lambda x: x.date)
-    ]
-    return LoanBase(
-        id=loan.id,
-        borrower_name=loan.borrower_name,
-        principal=loan.principal,
-        start_date=loan.start_date,
-        due_date=loan.due_date,
-        status=loan.status,
-        note=loan.note,
-        remaining_amount=remaining,
-        payments=payments,
-    )
-
-
-@router.get("/", response_model=list[LoanBase])
+@router.get("/", response_model=List[LoanBase])
 def list_loans(
+    skip: int = 0,
+    limit: int = 100,
+    status_filter: Optional[str] = None,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
-    status: str | None = None,
+    user = Depends(get_current_user)
 ):
-    query = db.query(Loan).filter(Loan.user_id == user.id)
-    if status:
-        query = query.filter(Loan.status == status)
+    """List all loans for the current user"""
+    try:
+        loans = get_loans(db, user.id, skip, limit)
+        if status_filter:
+            loans = [loan for loan in loans if loan.status == status_filter]
+        return loans
+    except Exception as e:
+        app_logger.error(f"List loans error for user {user.id}: {str(e)}", exc_info=True)
+        raise
 
-    loans = query.order_by(Loan.start_date.desc()).all()
-    return [_loan_to_schema(db, loan) for loan in loans]
 
-
-@router.post("/", response_model=LoanBase)
-def create_loan(
+@router.post("/", response_model=LoanBase, status_code=status.HTTP_201_CREATED)
+def create_loan_endpoint(
     data: LoanCreateRequest,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
+    user = Depends(get_current_user)
 ):
-    loan = Loan(
-        user_id=user.id,
-        borrower_name=data.borrower_name,
-        principal=data.principal,
-        start_date=data.start_date,
-        due_date=data.due_date,
-        note=data.note,
-        status="active",
-    )
-    db.add(loan)
-    db.commit()
-    db.refresh(loan)
-    return _loan_to_schema(db, loan)
+    """Create a new loan"""
+    try:
+        loan = create_loan(db, user.id, data)
+        app_logger.info(f"Loan created: {loan.id} by user {user.id}")
+        return loan
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Create loan error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create loan"
+        )
 
 
 @router.get("/{loan_id}", response_model=LoanBase)
-def get_loan(
+def get_loan_endpoint(
     loan_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
+    user = Depends(get_current_user)
 ):
-    loan = (
-        db.query(Loan)
-        .filter(Loan.id == loan_id, Loan.user_id == user.id)
-        .first()
-    )
-    if not loan:
-        raise HTTPException(status_code=404, detail="Loan not found")
-
-    return _loan_to_schema(db, loan)
+    """Get a specific loan"""
+    return get_loan_by_id(db, loan_id, user.id)
 
 
 @router.put("/{loan_id}", response_model=LoanBase)
-def update_loan(
+def update_loan_endpoint(
     loan_id: int,
     data: LoanUpdateRequest,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
+    user = Depends(get_current_user)
 ):
-    loan = (
-        db.query(Loan)
-        .filter(Loan.id == loan_id, Loan.user_id == user.id)
-        .first()
-    )
-    if not loan:
-        raise HTTPException(status_code=404, detail="Loan not found")
+    """Update a loan"""
+    try:
+        return update_loan(db, loan_id, user.id, data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Update loan error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update loan"
+        )
 
-    for key, value in data.dict(exclude_unset=True)_
 
+@router.delete("/{loan_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_loan_endpoint(
+    loan_id: int,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """Delete a loan"""
+    try:
+        delete_loan(db, loan_id, user.id)
+        app_logger.info(f"Loan deleted: {loan_id} by user {user.id}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Delete loan error for user {user.id}: {str(e)}", exc_info=True)
+        raise
+
+
+@router.post("/{loan_id}/payments", response_model=LoanPaymentBase, status_code=status.HTTP_201_CREATED)
+def add_payment_endpoint(
+    loan_id: int,
+    data: LoanPaymentCreateRequest,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """Add a payment to a loan"""
+    try:
+        payment = add_payment(db, loan_id, user.id, data)
+        app_logger.info(f"Payment added to loan {loan_id} by user {user.id}")
+        return payment
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Add payment error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add payment"
+        )
+
+
+@router.get("/{loan_id}/payments", response_model=List[LoanPaymentBase])
+def get_payments_endpoint(
+    loan_id: int,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """Get all payments for a loan"""
+    try:
+        payments = get_payments(db, loan_id, user.id)
+        return payments
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Get payments error for user {user.id}: {str(e)}", exc_info=True)
+        raise

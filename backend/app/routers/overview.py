@@ -1,55 +1,90 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime
+from sqlalchemy import func, extract
+from datetime import datetime, date, timedelta
+from typing import List, Dict
 
 from app.models.savings import Savings
-from app.models.loan import Loan, LoanPayment
+from app.models.loan import Loan
 from app.models.target import Target
 from app.utils.jwt import get_current_user
 from app.db.session import get_db
+from app.services.savings_service import get_balance
+from app.services.loans_service import get_total_active_loans_amount
+from app.services.targets_service import get_total_target_current_amount
+from app.utils.calculations import get_monthly_summary
+from app.core.logging_config import app_logger
 
 router = APIRouter()
 
 
 @router.get("/")
-def get_overview(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_overview(
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """Get financial overview for the current user"""
+    try:
+        # Total balance from savings
+        balance_info = get_balance(db, user.id)
+        total_balance = balance_info["total_balance"]
 
-    # Total balance
-    total_in = db.query(func.sum(Savings.amount)).filter(
-        Savings.user_id == user.id,
-        Savings.type == "IN"
-    ).scalar() or 0
+        # Total active loans amount
+        total_active_loans_amount = get_total_active_loans_amount(db, user.id)
 
-    total_out = db.query(func.sum(Savings.amount)).filter(
-        Savings.user_id == user.id,
-        Savings.type == "OUT"
-    ).scalar() or 0
+        # Total target current amount
+        total_target_current_amount = get_total_target_current_amount(db, user.id)
 
-    total_balance = total_in - total_out
+        # Monthly income and expense (current month)
+        now = datetime.now()
+        monthly_info = get_monthly_summary(db, user.id, now.year, now.month)
+        total_income_month = monthly_info["income"]
+        total_expense_month = monthly_info["expense"]
 
-    # ACTIVE LOANS
-    active_loans = db.query(Loan).filter(
-        Loan.user_id == user.id,
-        Loan.status == "active"
-    ).all()
+        # Get last 6 months summary for chart
+        monthly_summaries = []
+        for i in range(6):
+            month = now.month - i
+            year = now.year
+            if month <= 0:
+                month += 12
+                year -= 1
+            monthly_info = get_monthly_summary(db, user.id, year, month)
+            monthly_summaries.append({
+                "month": month,
+                "year": year,
+                "income": monthly_info["income"],
+                "expense": monthly_info["expense"],
+                "net": monthly_info["net"]
+            })
+        monthly_summaries.reverse()
 
-    total_loans_active = 0
-    for loan in active_loans:
-        payments = sum([p.amount for p in loan.payments])
-        total_loans_active += max(loan.principal - payments, 0)
+        # Daily trend (last 7 days)
+        daily_trend = []
+        for i in range(7):
+            day = date.today() - timedelta(days=6-i)
+            day_savings = db.query(Savings).filter(
+                Savings.user_id == user.id,
+                Savings.date == day
+            ).all()
+            day_income = sum(s.amount for s in day_savings if s.type == "IN")
+            day_expense = sum(s.amount for s in day_savings if s.type == "OUT")
+            daily_trend.append({
+                "date": day.isoformat(),
+                "income": day_income,
+                "expense": day_expense,
+                "net": day_income - day_expense
+            })
 
-    # TARGET TOTAL
-    total_target_amount = db.query(func.sum(Target.current_amount)).filter(
-        Target.user_id == user.id,
-        Target.status == "active"
-    ).scalar() or 0
-
-    return {
-        "total_balance": total_balance,
-        "total_loans_active": total_loans_active,
-        "total_targets_amount": total_target_amount,
-        "total_income_month": 0,  # bisa diisi nanti
-        "total_expense_month": 0  # bisa diisi nanti
-    }
-
+        return {
+            "total_balance": total_balance,
+            "total_active_loans_amount": total_active_loans_amount,
+            "total_target_current_amount": total_target_current_amount,
+            "total_income_month": total_income_month,
+            "total_expense_month": total_expense_month,
+            "monthly_summaries": monthly_summaries,
+            "daily_trend": daily_trend
+        }
+    except Exception as e:
+        app_logger.error(f"Overview error for user {user.id}: {str(e)}", exc_info=True)
+        raise

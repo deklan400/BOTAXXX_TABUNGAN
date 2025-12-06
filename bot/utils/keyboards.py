@@ -1,1 +1,55 @@
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+
+def get_main_menu_keyboard():
+    """Get main menu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("💰 Check Saldo", callback_data="menu_saldo")],
+        [
+            InlineKeyboardButton("📂 Tabungan", callback_data="menu_tabungan"),
+            InlineKeyboardButton("📑 Pinjaman", callback_data="menu_pinjaman"),
+        ],
+        [
+            InlineKeyboardButton("🎯 Target", callback_data="menu_target"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_tabungan_menu_keyboard():
+    """Get tabungan submenu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("📋 List Tabungan", callback_data="tabungan_list")],
+        [InlineKeyboardButton("➕ Add Income", callback_data="tabungan_add_income")],
+        [InlineKeyboardButton("➖ Add Expense", callback_data="tabungan_add_expense")],
+        [InlineKeyboardButton("🔙 Back", callback_data="menu_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_pinjaman_menu_keyboard():
+    """Get pinjaman submenu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("📋 List Pinjaman", callback_data="pinjaman_list")],
+        [InlineKeyboardButton("➕ Add Pinjaman", callback_data="pinjaman_add")],
+        [InlineKeyboardButton("💳 Add Payment", callback_data="pinjaman_add_payment")],
+        [InlineKeyboardButton("🔙 Back", callback_data="menu_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_target_menu_keyboard():
+    """Get target submenu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("📋 List Target", callback_data="target_list")],
+        [InlineKeyboardButton("➕ Add Target", callback_data="target_add")],
+        [InlineKeyboardButton("📊 Update Amount", callback_data="target_update")],
+        [InlineKeyboardButton("🔙 Back", callback_data="menu_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_cancel_keyboard():
+    """Get cancel keyboard"""
+    keyboard = [[InlineKeyboardButton("❌ Cancel", callback_data="cancel")]]
+    return InlineKeyboardMarkup(keyboard)
