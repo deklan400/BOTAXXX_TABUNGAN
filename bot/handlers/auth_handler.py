@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from bot.services.api_client import APIClient
-from bot.utils.state_manager import state_manager
+from services.api_client import APIClient
+from utils.state_manager import state_manager
 
 
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -19,7 +19,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state_manager.set_data(update.effective_user.id, "token", api_client.token)
         state_manager.set_data(update.effective_user.id, "authenticated", True)
 
-        from bot.utils.keyboards import get_main_menu_keyboard
+        from utils.keyboards import get_main_menu_keyboard
 
         await update.message.reply_text(
             "✅ Authenticated! Welcome to BOTAXXX Financial Command Center.\n\nSelect an option:",

@@ -1,10 +1,10 @@
 from datetime import date
 from telegram import Update
 from telegram.ext import ContextTypes
-from bot.utils.state_manager import state_manager
-from bot.utils.keyboards import get_pinjaman_menu_keyboard, get_main_menu_keyboard, get_cancel_keyboard
-from bot.utils.formatter import format_loan
-from bot.services.api_client import APIClient
+from utils.state_manager import state_manager
+from utils.keyboards import get_pinjaman_menu_keyboard, get_main_menu_keyboard, get_cancel_keyboard
+from utils.formatter import format_loan
+from services.api_client import APIClient
 
 
 async def pinjaman_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

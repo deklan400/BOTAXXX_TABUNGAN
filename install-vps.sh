@@ -178,6 +178,9 @@ print_warning "Skipping pip upgrade"
 
 pip install -r requirements.txt
 
+# Install email-validator if not in requirements
+pip install email-validator || print_warning "email-validator may already be installed"
+
 # Generate SECRET_KEY
 SECRET_KEY=$(python3.11 -c "import secrets; print(secrets.token_urlsafe(32))")
 
@@ -239,6 +242,9 @@ python3.11 -m pip install --upgrade pip --user 2>/dev/null || \
 print_warning "Skipping pip upgrade"
 
 pip install -r requirements.txt
+
+# Install email-validator if not in requirements
+pip install email-validator || print_warning "email-validator may already be installed"
 
 # Create .env file
 cat > .env << EOF

@@ -1,9 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from bot.utils.state_manager import state_manager
-from bot.utils.formatter import format_overview
-from bot.utils.keyboards import get_main_menu_keyboard
-from bot.services.api_client import APIClient
+from utils.state_manager import state_manager
+from utils.formatter import format_overview
+from utils.keyboards import get_main_menu_keyboard
+from services.api_client import APIClient
 
 
 async def saldo_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

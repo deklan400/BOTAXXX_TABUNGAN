@@ -1,10 +1,10 @@
 from datetime import date
 from telegram import Update
 from telegram.ext import ContextTypes
-from bot.utils.state_manager import state_manager
-from bot.utils.keyboards import get_tabungan_menu_keyboard, get_main_menu_keyboard, get_cancel_keyboard
-from bot.utils.formatter import format_savings, format_rupiah
-from bot.services.api_client import APIClient
+from utils.state_manager import state_manager
+from utils.keyboards import get_tabungan_menu_keyboard, get_main_menu_keyboard, get_cancel_keyboard
+from utils.formatter import format_savings, format_rupiah
+from services.api_client import APIClient
 
 
 async def tabungan_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -116,7 +116,7 @@ async def handle_savings_input(update: Update, context: ContextTypes.DEFAULT_TYP
             })
 
             state_manager.clear_waiting_for(user_id)
-            from bot.utils.keyboards import get_tabungan_menu_keyboard
+            from utils.keyboards import get_tabungan_menu_keyboard
             await update.message.reply_text(
                 f"✅ {savings_type} transaction added successfully!",
                 reply_markup=get_tabungan_menu_keyboard(),
