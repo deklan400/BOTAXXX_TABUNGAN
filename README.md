@@ -245,6 +245,20 @@ Ikuti panduan lengkap di:
 | `QUICK_REFERENCE_VPS.md` | Quick reference untuk setup cepat |
 | `DEPLOY_VPS.md` | Dokumentasi deployment detail dengan troubleshooting |
 | `QUICK_START_VPS.md` | Quick start guide untuk deployment cepat |
+| `FIX_PIP_ERROR.md` | Solusi untuk error pip installation di Debian/Ubuntu |
+
+### Troubleshooting VPS
+
+**Error pip installation (`uninstall-no-record-file`):**
+Ini adalah error umum di Debian/Ubuntu. Lihat `FIX_PIP_ERROR.md` untuk solusi lengkap.
+
+**Quick fix:**
+```bash
+# Skip upgrade pip, langsung install requirements
+cd /var/www/botaxxx/backend
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ### Prerequisites untuk VPS
 

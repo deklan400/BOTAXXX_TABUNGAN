@@ -43,7 +43,7 @@ sudo apt install -y curl wget git build-essential software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update
 sudo apt install -y python3.11 python3.11-venv python3.11-dev
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 --break-system-packages
 
 # Node.js 18
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -96,7 +96,7 @@ git clone https://github.com/deklan400/BOTAXXX_TABUNGAN.git .
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
+# Skip upgrade jika error, langsung install:
 pip install -r requirements.txt
 
 # Generate SECRET_KEY
@@ -340,6 +340,15 @@ cat /var/www/botaxxx/backend/.env
 ```bash
 sudo journalctl -u botaxxx-bot -n 50
 cat /var/www/botaxxx/bot/.env
+```
+
+**Pip installation error:**
+```bash
+# Jika error "uninstall-no-record-file", skip upgrade pip
+cd /var/www/botaxxx/backend
+source venv/bin/activate
+pip install -r requirements.txt
+# Lihat FIX_PIP_ERROR.md untuk solusi lengkap
 ```
 
 **Nginx error:**

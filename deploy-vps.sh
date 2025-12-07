@@ -72,7 +72,12 @@ print_info "Step 3: Installing Python 3.11..."
 add-apt-repository ppa:deadsnakes/ppa -y
 apt update
 apt install -y python3.11 python3.11-venv python3.11-dev
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Install pip (handle Debian pip issue)
+print_info "Installing pip..."
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 --break-system-packages 2>/dev/null || \
+python3.11 -m ensurepip --upgrade --break-system-packages 2>/dev/null || \
+print_warning "Pip may already be installed via package manager"
 
 # Step 4: Install Node.js
 print_info "Step 4: Installing Node.js..."

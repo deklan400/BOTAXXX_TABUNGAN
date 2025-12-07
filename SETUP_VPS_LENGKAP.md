@@ -104,7 +104,11 @@ sudo apt update
 sudo apt install -y python3.11 python3.11-venv python3.11-dev
 
 # Install pip untuk Python 3.11
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+# Gunakan --break-system-packages untuk Debian/Ubuntu
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 --break-system-packages
+
+# Atau jika error, gunakan ensurepip
+# python3.11 -m ensurepip --upgrade --break-system-packages
 
 # Verify installation
 python3.11 --version
@@ -116,6 +120,12 @@ pip3.11 --version
 Python 3.11.x
 pip 23.x.x
 ```
+
+**⚠️ Jika muncul error `uninstall-no-record-file`:**
+Ini normal di Debian/Ubuntu. Pip sudah terinstall via package manager. Anda bisa:
+- Skip upgrade pip (langsung install requirements di virtual environment)
+- Atau gunakan `--break-system-packages` flag
+- Lihat `FIX_PIP_ERROR.md` untuk solusi lengkap
 
 ### 3.2 Install Node.js 18+
 
@@ -254,10 +264,19 @@ source venv/bin/activate
 ### 6.2 Install Dependencies
 
 ```bash
-# Upgrade pip
+# Upgrade pip (jika error, skip langkah ini)
 pip install --upgrade pip
 
+# Jika muncul error "uninstall-no-record-file", skip upgrade dan langsung install:
+# pip install -r requirements.txt
+
 # Install semua dependencies
+pip install -r requirements.txt
+```
+
+**⚠️ Jika error saat upgrade pip:**
+Error `uninstall-no-record-file` adalah normal di Debian/Ubuntu. Langsung install requirements tanpa upgrade pip:
+```bash
 pip install -r requirements.txt
 ```
 
@@ -928,6 +947,26 @@ cat /var/www/botaxxx/bot/.env
 
 # Pastikan TELEGRAM_BOT_TOKEN sudah di-set
 ```
+
+### Pip installation error
+
+Jika muncul error `uninstall-no-record-file` saat install pip:
+
+```bash
+# Solusi 1: Skip upgrade pip (Recommended)
+# Di virtual environment, langsung install tanpa upgrade
+cd /var/www/botaxxx/backend
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Solusi 2: Gunakan --break-system-packages
+python3.11 -m pip install --upgrade pip --break-system-packages
+
+# Solusi 3: Install dengan --user
+python3.11 -m pip install --upgrade pip --user
+```
+
+**Lihat `FIX_PIP_ERROR.md` untuk solusi lengkap.**
 
 ### Nginx error
 
