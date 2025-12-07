@@ -534,7 +534,54 @@ server {
 EOF
 else
     # Regular domain or IPv4
-    cat > /etc/nginx/sites-available/botaxxx << EOF
+    # If API_DOMAIN == DOMAIN, combine frontend and backend in one server block
+    if [ "$API_DOMAIN" = "$DOMAIN" ]; then
+        cat > /etc/nginx/sites-available/botaxxx << EOF
+# Combined Frontend and Backend (same domain)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $DOMAIN www.$DOMAIN;
+
+    # Backend API routes
+    location /api {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        rewrite ^/api/(.*) /\$1 break;
+    }
+
+    # Backend API direct routes (docs, health, etc)
+    location ~ ^/(docs|openapi.json|health|auth|users|overview|savings|loans|targets) {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    # Frontend Dashboard
+    root $APP_DIR/dashboard/dist;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOF
+    else
+        # Separate API and Frontend domains
+        cat > /etc/nginx/sites-available/botaxxx << EOF
 # Backend API
 server {
     listen 80;
@@ -568,6 +615,7 @@ server {
     }
 }
 EOF
+    fi
 fi
 
 # Enable site
