@@ -309,9 +309,20 @@ cd $APP_DIR/dashboard
 npm install
 
 # Create .env file
+# Use HTTP if no SSL, or if domain is IP address
+if [ -z "$SSL_EMAIL" ] || [[ $API_DOMAIN == *"."* && $API_DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ $API_DOMAIN == *":"* ]]; then
+    # HTTP for IP addresses or when SSL not configured
+    API_URL="http://$API_DOMAIN"
+else
+    # HTTPS for domains with SSL
+    API_URL="https://$API_DOMAIN"
+fi
+
 cat > .env << EOF
-VITE_API_BASE_URL=https://$API_DOMAIN
+VITE_API_BASE_URL=$API_URL
 EOF
+
+print_info "Frontend .env created with API URL: $API_URL"
 
 # Build frontend
 print_info "Building frontend..."
