@@ -247,12 +247,13 @@ pip install -r requirements.txt
 pip install email-validator || print_warning "email-validator may already be installed"
 
 # Create .env file
+# Use localhost for bot since it's on same server
 cat > .env << EOF
 # Telegram Bot
 TELEGRAM_BOT_TOKEN=${TELEGRAM_TOKEN:-your-telegram-bot-token-here}
 
-# API Configuration
-API_BASE_URL=https://$API_DOMAIN
+# API Configuration (use localhost since bot and backend are on same server)
+API_BASE_URL=http://localhost:8000
 EOF
 
 chown $APP_USER:$APP_USER .env

@@ -5,7 +5,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+# Get API_BASE_URL from env, default to localhost
+# If IPv6 address, wrap it in brackets
+api_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+# Handle IPv6 addresses (if URL contains IPv6 without brackets)
+if "://" in api_url and "[" not in api_url:
+    # Check if it's an IPv6 address (contains colons but no brackets)
+    parts = api_url.split("://", 1)
+    if len(parts) == 2:
+        scheme, rest = parts
+        # If rest looks like IPv6 (has multiple colons), wrap in brackets
+        if rest.count(":") > 1 and not rest.startswith("["):
+            # Extract host and port
+            if "/" in rest:
+                host_port, path = rest.split("/", 1)
+                path = "/" + path
+            else:
+                host_port = rest
+                path = ""
+            # Wrap IPv6 in brackets
+            if ":" in host_port:
+                host, port = host_port.rsplit(":", 1)
+                if host.count(":") > 0:  # IPv6 address
+                    api_url = f"{scheme}://[{host}]:{port}{path}"
+                else:
+                    api_url = f"{scheme}://{host}:{port}{path}"
+            else:
+                if host_port.count(":") > 0:  # IPv6 without port
+                    api_url = f"{scheme}://[{host_port}]{path}"
+
+API_BASE_URL = api_url
 
 
 class APIClient:
