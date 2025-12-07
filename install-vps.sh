@@ -409,20 +409,37 @@ sleep 5
 BACKEND_READY=false
 for i in {1..30}; do
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-        # Test if API endpoint is actually accessible
+        # Test if API endpoint is actually accessible (check for 404 or valid response)
         sleep 2
-        if curl -s -X POST http://localhost:8000/auth/telegram-login \
+        ENDPOINT_TEST=$(curl -s -X POST http://localhost:8000/auth/telegram-login \
             -H "Content-Type: application/json" \
-            -d '{"telegram_id":"test"}' 2>&1 | grep -q "not found\|Telegram ID not found"; then
+            -d '{"telegram_id":"test"}' 2>&1)
+        # If we get a response (not 404), endpoint is ready
+        if echo "$ENDPOINT_TEST" | grep -q "Telegram ID not found\|404\|Not Found"; then
+            # Got response (even if error), means endpoint exists
+            if echo "$ENDPOINT_TEST" | grep -q "404\|Not Found"; then
+                # Still 404, wait a bit more
+                if [ $i -lt 25 ]; then
+                    print_info "Backend health check passed, waiting for API endpoints to be ready... ($i/30)"
+                    sleep 2
+                    continue
+                fi
+            fi
             print_success "Backend is ready and API endpoints are accessible!"
             BACKEND_READY=true
             break
         else
-            print_info "Backend health check passed, waiting for API endpoints to be ready..."
+            # No response or connection error, wait
+            if [ $i -lt 30 ]; then
+                print_info "Backend health check passed, waiting for API endpoints to be ready... ($i/30)"
+                sleep 2
+            fi
         fi
-    fi
-    if [ $i -lt 30 ]; then
-        sleep 2
+    else
+        # Health check failed, wait
+        if [ $i -lt 30 ]; then
+            sleep 2
+        fi
     fi
 done
 
@@ -503,6 +520,16 @@ server {
     location / {
         try_files \$uri \$uri/ /index.html;
     }
+    
+    # API proxy fallback (if frontend not built)
+    location /api {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
 }
 EOF
 else
@@ -546,6 +573,13 @@ fi
 # Enable site
 ln -sf /etc/nginx/sites-available/botaxxx /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
+
+# Verify frontend dist exists
+if [ ! -d "$APP_DIR/dashboard/dist" ]; then
+    print_warning "Frontend dist directory not found!"
+    print_info "Frontend may not work. Build it: cd $APP_DIR/dashboard && npm run build"
+fi
+
 nginx -t || print_error "Nginx configuration test failed"
 systemctl reload nginx || print_error "Failed to reload Nginx"
 
