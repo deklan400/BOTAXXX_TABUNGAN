@@ -179,7 +179,16 @@ git config --global --add safe.directory $APP_DIR
 if [ ! -d ".git" ]; then
     git clone $REPO_URL .
 else
-    git pull origin main || print_warning "Git pull failed, continuing..."
+    # Handle git pull conflicts
+    if ! git pull origin main 2>&1 | grep -q "error: Your local changes"; then
+        print_success "Git pull successful"
+    else
+        print_warning "Git pull failed due to local changes"
+        print_info "Stashing local changes and pulling latest..."
+        git stash
+        git pull origin main || print_warning "Git pull failed after stash, continuing..."
+        print_info "Local changes stashed. If needed, recover with: git stash pop"
+    fi
 fi
 chown -R $APP_USER:$APP_USER $APP_DIR
 
