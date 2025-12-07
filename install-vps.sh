@@ -206,6 +206,11 @@ print_warning "Skipping pip upgrade"
 
 pip install -r requirements.txt
 
+# Ensure bcrypt is installed with compatible version (fix for passlib compatibility)
+# bcrypt 4.0.0+ is incompatible with passlib 1.7.4
+print_info "Ensuring bcrypt version compatibility..."
+pip install "bcrypt<4.0.0" || print_warning "bcrypt version check failed, but continuing..."
+
 # Install email-validator if not in requirements
 pip install email-validator || print_warning "email-validator may already be installed"
 
@@ -739,9 +744,10 @@ else
     print_info "Check logs: sudo journalctl -u botaxxx-backend -n 50"
     print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
     print_info "Common fixes:"
-    print_info "1. Check email-validator: cd $APP_DIR/backend && source venv/bin/activate && pip install email-validator"
-    print_info "2. Check database connection: verify DATABASE_URL in backend/.env"
-    print_info "3. Check migrations: cd $APP_DIR/backend && source venv/bin/activate && alembic upgrade head"
+    print_info "1. Check bcrypt version: cd $APP_DIR/backend && source venv/bin/activate && pip install 'bcrypt<4.0.0'"
+    print_info "2. Check email-validator: cd $APP_DIR/backend && source venv/bin/activate && pip install email-validator"
+    print_info "3. Check database connection: verify DATABASE_URL in backend/.env"
+    print_info "4. Check migrations: cd $APP_DIR/backend && source venv/bin/activate && alembic upgrade head"
 fi
 
 # Check bot
@@ -809,6 +815,7 @@ echo "  - Bot logs: sudo journalctl -u botaxxx-bot -f"
 echo "  - Backend error log: sudo tail -f /var/log/botaxxx/backend.error.log"
 echo "  - Bot error log: sudo tail -f /var/log/botaxxx/bot.error.log"
 echo "  - If bot gets 404, restart backend: sudo systemctl restart botaxxx-backend"
+echo "  - If you see 'bcrypt version' errors: cd $APP_DIR/backend && source venv/bin/activate && pip install 'bcrypt<4.0.0' && sudo systemctl restart botaxxx-backend"
 echo ""
 print_info "Access URLs:"
 if [[ $DOMAIN == *":"* ]]; then
