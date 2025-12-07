@@ -448,10 +448,14 @@ fi
 print_info "Setting up Nginx..."
 
 # Create Nginx config
-cat > /etc/nginx/sites-available/botaxxx << EOF
+# Check if domain is IPv6
+if [[ $DOMAIN == *":"* ]]; then
+    # IPv6 address - use default_server and listen on both IPv4 and IPv6
+    cat > /etc/nginx/sites-available/botaxxx << EOF
 # Backend API
 server {
-    listen 80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name $API_DOMAIN;
 
     location / {
@@ -470,6 +474,7 @@ server {
 # Frontend Dashboard
 server {
     listen 80;
+    listen [::]:80;
     server_name $DOMAIN www.$DOMAIN;
 
     root $APP_DIR/dashboard/dist;
@@ -480,6 +485,43 @@ server {
     }
 }
 EOF
+else
+    # Regular domain or IPv4
+    cat > /etc/nginx/sites-available/botaxxx << EOF
+# Backend API
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $API_DOMAIN;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+
+# Frontend Dashboard
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $DOMAIN www.$DOMAIN;
+
+    root $APP_DIR/dashboard/dist;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOF
+fi
 
 # Enable site
 ln -sf /etc/nginx/sites-available/botaxxx /etc/nginx/sites-enabled/
@@ -648,13 +690,22 @@ echo "  - If bot gets 404, restart backend: sudo systemctl restart botaxxx-backe
 echo ""
 print_info "Access URLs:"
 if [[ $DOMAIN == *":"* ]]; then
-    echo "  Frontend: http://[$DOMAIN]"
-    echo "  API: http://[$API_DOMAIN]"
-    echo "  API Docs: http://[$API_DOMAIN]/docs"
-    echo "  Health: http://[$API_DOMAIN]/health"
+    IPV4_ADDR=$(curl -s -4 ifconfig.me 2>/dev/null || echo '')
+    echo "  IPv6 (use brackets in browser):"
+    echo "    Frontend: http://[$DOMAIN]"
+    echo "    API: http://[$API_DOMAIN]"
+    echo "    API Docs: http://[$API_DOMAIN]/docs"
+    echo "    Health: http://[$API_DOMAIN]/health"
+    if [ ! -z "$IPV4_ADDR" ]; then
+        echo ""
+        echo "  IPv4 (RECOMMENDED - easier to access):"
+        echo "    Frontend: http://$IPV4_ADDR"
+        echo "    API: http://$IPV4_ADDR"
+        echo "    API Docs: http://$IPV4_ADDR/docs"
+        echo "    Health: http://$IPV4_ADDR/health"
+    fi
     echo ""
-    echo "  Note: IPv6 addresses need brackets in browser URLs!"
-    echo "  Or use IPv4: http://$(curl -s -4 ifconfig.me 2>/dev/null || echo 'YOUR_IPV4')"
+    echo "  Note: If IPv6 doesn't work, use IPv4 address above"
 else
     echo "  Frontend: http://$DOMAIN"
     echo "  API: http://$API_DOMAIN"
