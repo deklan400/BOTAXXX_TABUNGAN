@@ -110,14 +110,20 @@ print_info "Creating database and user..."
 DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 if [ "$DB_EXISTS" != "1" ]; then
     sudo -u postgres createdb $DB_NAME
+    print_success "Database $DB_NAME created"
+else
+    print_info "Database $DB_NAME already exists"
 fi
 
 # Check if user exists
 USER_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename='$DB_USER'")
 if [ "$USER_EXISTS" != "1" ]; then
     sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+    print_success "Database user $DB_USER created"
 else
+    # Always update password to ensure it matches
     sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+    print_success "Database user $DB_USER password updated"
 fi
 
 # Set privileges
@@ -186,7 +192,8 @@ pip install email-validator || print_warning "email-validator may already be ins
 # Generate SECRET_KEY
 SECRET_KEY=$(python3.11 -c "import secrets; print(secrets.token_urlsafe(32))")
 
-# Create .env file
+# Create .env file with correct database password
+print_info "Creating backend .env file..."
 cat > .env << EOF
 # Database
 DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
@@ -212,16 +219,41 @@ EOF
 
 chown $APP_USER:$APP_USER .env
 
+# Verify .env file was created correctly
+if grep -q "DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD" .env; then
+    print_success "Backend .env file created with correct database password"
+else
+    print_error "Failed to create .env file correctly!"
+    exit 1
+fi
+
 # Test database connection before migrations
 print_info "Testing database connection..."
 source venv/bin/activate
+
+# Test with psql first (simpler)
+if sudo -u postgres psql -U $DB_USER -d $DB_NAME -c "SELECT 1;" > /dev/null 2>&1; then
+    print_success "Database connection test passed (psql)"
+else
+    # If psql test fails, try with password
+    PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -d $DB_NAME -h localhost -c "SELECT 1;" > /dev/null 2>&1 || {
+        print_warning "Direct psql test failed, but continuing with Python test..."
+    }
+fi
+
+# Test with Python/SQLAlchemy
 python3.11 -c "
 import os
 from dotenv import load_dotenv
 load_dotenv()
 from sqlalchemy import create_engine, text
 try:
-    engine = create_engine(os.getenv('DATABASE_URL'))
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        print('ERROR: DATABASE_URL not found in .env')
+        exit(1)
+    print(f'Testing connection with: postgresql://$DB_USER:***@localhost:5432/$DB_NAME')
+    engine = create_engine(db_url)
     with engine.connect() as conn:
         result = conn.execute(text('SELECT 1'))
         print('Database connection successful!')
@@ -229,7 +261,11 @@ except Exception as e:
     print(f'Database connection failed: {e}')
     exit(1)
 " || {
-    print_error "Database connection failed! Check DATABASE_URL in .env"
+    print_error "Database connection failed!"
+    print_info "Troubleshooting:"
+    print_info "1. Check password in .env: grep DATABASE_URL $APP_DIR/backend/.env"
+    print_info "2. Check PostgreSQL user: sudo -u postgres psql -c '\\du $DB_USER'"
+    print_info "3. Test connection: PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -d $DB_NAME -h localhost -c 'SELECT 1;'"
     exit 1
 }
 
