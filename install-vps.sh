@@ -105,9 +105,34 @@ DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
 
 # Create database and user
 print_info "Creating database and user..."
+
+# Check if database exists
+DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
+if [ "$DB_EXISTS" != "1" ]; then
+    sudo -u postgres createdb $DB_NAME
+fi
+
+# Check if user exists
+USER_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename='$DB_USER'")
+if [ "$USER_EXISTS" != "1" ]; then
+    sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+else
+    sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+fi
+
+# Set privileges
 sudo -u postgres psql << EOF
-CREATE DATABASE $DB_NAME;
-CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';
+ALTER ROLE $DB_USER SET client_encoding TO 'utf8';
+ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
+ALTER ROLE $DB_USER SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
+\c $DB_NAME
+GRANT ALL ON SCHEMA public TO $DB_USER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $DB_USER;
+\q
+EOF
+
 ALTER ROLE $DB_USER SET client_encoding TO 'utf8';
 ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
 ALTER ROLE $DB_USER SET timezone TO 'UTC';
@@ -139,10 +164,14 @@ chown $APP_USER:$APP_USER $APP_DIR
 # Step 9: Clone repository
 print_info "Step 9/13: Cloning repository..."
 cd $APP_DIR
+
+# Fix git ownership issue
+git config --global --add safe.directory $APP_DIR
+
 if [ ! -d ".git" ]; then
     git clone $REPO_URL .
 else
-    git pull origin main
+    git pull origin main || print_warning "Git pull failed, continuing..."
 fi
 chown -R $APP_USER:$APP_USER $APP_DIR
 
@@ -192,7 +221,7 @@ chown $APP_USER:$APP_USER .env
 # Run migrations
 print_info "Running database migrations..."
 source venv/bin/activate
-alembic upgrade head
+alembic upgrade head || print_warning "Migrations may have failed, check manually"
 
 # Step 11: Setup Frontend
 print_info "Step 11/13: Setting up frontend..."
@@ -206,7 +235,7 @@ EOF
 
 # Build frontend
 print_info "Building frontend..."
-npm run build
+npm run build || print_error "Frontend build failed, check manually"
 
 # Step 12: Setup Bot
 print_info "Step 12/13: Setting up bot..."
@@ -286,8 +315,8 @@ EOF
 
 # Enable and start services
 systemctl daemon-reload
-systemctl enable botaxxx-backend botaxxx-bot
-systemctl start botaxxx-backend botaxxx-bot
+systemctl enable botaxxx-backend botaxxx-bot || print_warning "Failed to enable services"
+systemctl start botaxxx-backend botaxxx-bot || print_warning "Failed to start services"
 
 # Step 14: Setup Nginx
 print_info "Setting up Nginx..."
@@ -329,8 +358,8 @@ EOF
 # Enable site
 ln -sf /etc/nginx/sites-available/botaxxx /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
-nginx -t
-systemctl reload nginx
+nginx -t || print_error "Nginx configuration test failed"
+systemctl reload nginx || print_error "Failed to reload Nginx"
 
 # Step 15: Setup SSL (if email provided)
 if [ ! -z "$SSL_EMAIL" ]; then
