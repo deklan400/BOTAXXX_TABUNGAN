@@ -312,7 +312,33 @@ EOF
 # Enable and start services
 systemctl daemon-reload
 systemctl enable botaxxx-backend botaxxx-bot || print_warning "Failed to enable services"
-systemctl start botaxxx-backend botaxxx-bot || print_warning "Failed to start services"
+
+# Start backend first
+print_info "Starting backend service..."
+systemctl start botaxxx-backend || print_error "Failed to start backend"
+
+# Wait for backend to be ready
+print_info "Waiting for backend to be ready..."
+sleep 5
+for i in {1..30}; do
+    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+        print_success "Backend is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        print_warning "Backend may not be ready yet, but continuing..."
+    else
+        sleep 2
+    fi
+done
+
+# Start bot (only if backend is ready or Telegram token is set)
+if [ ! -z "$TELEGRAM_TOKEN" ] && [ "$TELEGRAM_TOKEN" != "your-telegram-bot-token-here" ]; then
+    print_info "Starting bot service..."
+    systemctl start botaxxx-bot || print_warning "Failed to start bot (check Telegram token)"
+else
+    print_warning "Bot service not started - Telegram token not set. Set it in bot/.env and restart."
+fi
 
 # Step 14: Setup Nginx
 print_info "Setting up Nginx..."
@@ -413,20 +439,39 @@ chown $APP_USER:$APP_USER $APP_DIR/deployment_info.txt
 
 # Final verification
 print_info "Verifying services..."
-sleep 3
+sleep 5
 
+# Check backend
 if systemctl is-active --quiet botaxxx-backend; then
     print_success "Backend service is running"
+    # Test API
+    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+        print_success "Backend API is responding"
+        HEALTH_RESPONSE=$(curl -s http://localhost:8000/health)
+        echo "  Health check: $HEALTH_RESPONSE"
+    else
+        print_warning "Backend is running but API not responding. Check logs: journalctl -u botaxxx-backend"
+    fi
 else
-    print_warning "Backend service is not running. Check logs: journalctl -u botaxxx-backend"
+    print_error "Backend service is not running!"
+    print_info "Check logs: sudo journalctl -u botaxxx-backend -n 50"
+    print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
 fi
 
+# Check bot
 if systemctl is-active --quiet botaxxx-bot; then
     print_success "Bot service is running"
 else
-    print_warning "Bot service is not running. Check logs: journalctl -u botaxxx-bot"
+    print_warning "Bot service is not running"
+    if [ -z "$TELEGRAM_TOKEN" ] || [ "$TELEGRAM_TOKEN" = "your-telegram-bot-token-here" ]; then
+        print_info "  Reason: Telegram token not set. Edit bot/.env and restart: sudo systemctl restart botaxxx-bot"
+    else
+        print_info "  Check logs: sudo journalctl -u botaxxx-bot -n 50"
+        print_info "  Check error log: sudo tail -50 /var/log/botaxxx/bot.error.log"
+    fi
 fi
 
+# Check nginx
 if systemctl is-active --quiet nginx; then
     print_success "Nginx is running"
 else
@@ -443,16 +488,30 @@ print_info "Deployment information saved to: $APP_DIR/deployment_info.txt"
 echo ""
 print_info "Next steps:"
 echo "  1. Check deployment info: cat $APP_DIR/deployment_info.txt"
-echo "  2. If Telegram token not set, edit: $APP_DIR/bot/.env"
-echo "  3. Restart bot: systemctl restart botaxxx-bot"
-echo "  4. Check services: systemctl status botaxxx-backend botaxxx-bot nginx"
-echo "  5. View logs: journalctl -u botaxxx-backend -f"
+if [ -z "$TELEGRAM_TOKEN" ] || [ "$TELEGRAM_TOKEN" = "your-telegram-bot-token-here" ]; then
+    echo "  2. ⚠️  IMPORTANT: Edit $APP_DIR/bot/.env and add your TELEGRAM_BOT_TOKEN"
+    echo "     Then restart bot: sudo systemctl restart botaxxx-bot"
+else
+    echo "  2. ✅ Telegram token already set"
+fi
+echo "  3. Register user in dashboard: http://$DOMAIN/register"
+echo "  4. Set your Telegram ID in profile settings after registration"
+echo "  5. Test bot: Send /start to your bot in Telegram"
+echo ""
+print_info "Troubleshooting:"
+echo "  - Backend logs: sudo journalctl -u botaxxx-backend -f"
+echo "  - Bot logs: sudo journalctl -u botaxxx-bot -f"
+echo "  - Backend error log: sudo tail -f /var/log/botaxxx/backend.error.log"
+echo "  - Bot error log: sudo tail -f /var/log/botaxxx/bot.error.log"
 echo ""
 print_info "Access URLs:"
 echo "  Frontend: http://$DOMAIN"
 echo "  API: http://$API_DOMAIN"
 echo "  API Docs: http://$API_DOMAIN/docs"
+echo "  Health: http://$API_DOMAIN/health"
 echo ""
-print_warning "If you haven't set up SSL yet, run: sudo certbot --nginx"
+if [ -z "$SSL_EMAIL" ]; then
+    print_warning "SSL not configured. To setup SSL later: sudo certbot --nginx"
+fi
 echo ""
 
