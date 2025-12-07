@@ -502,17 +502,35 @@ sleep 5
 if systemctl is-active --quiet botaxxx-backend; then
     print_success "Backend service is running"
     # Test API
+    sleep 2
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
         print_success "Backend API is responding"
         HEALTH_RESPONSE=$(curl -s http://localhost:8000/health)
         echo "  Health check: $HEALTH_RESPONSE"
+        
+        # Test registration endpoint
+        print_info "Testing API endpoints..."
+        REGISTER_TEST=$(curl -s -X POST http://localhost:8000/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"name":"Test","email":"test@test.com","password":"test12345"}' 2>&1)
+        if echo "$REGISTER_TEST" | grep -q "already registered\|successfully\|Field required"; then
+            print_success "Registration endpoint is working"
+        else
+            print_warning "Registration endpoint test inconclusive"
+        fi
     else
-        print_warning "Backend is running but API not responding. Check logs: journalctl -u botaxxx-backend"
+        print_warning "Backend is running but API not responding"
+        print_info "Check logs: sudo journalctl -u botaxxx-backend -n 50"
+        print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
     fi
 else
     print_error "Backend service is not running!"
     print_info "Check logs: sudo journalctl -u botaxxx-backend -n 50"
     print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
+    print_info "Common fixes:"
+    print_info "1. Check email-validator: cd $APP_DIR/backend && source venv/bin/activate && pip install email-validator"
+    print_info "2. Check database connection: verify DATABASE_URL in backend/.env"
+    print_info "3. Check migrations: cd $APP_DIR/backend && source venv/bin/activate && alembic upgrade head"
 fi
 
 # Check bot
