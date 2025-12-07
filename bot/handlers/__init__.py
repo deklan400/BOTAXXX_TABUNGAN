@@ -1,13 +1,13 @@
-from bot.handlers.auth_handler import start_handler
-from bot.handlers.saldo_handler import saldo_callback
-from bot.handlers.tabungan_handler import (
+from handlers.auth_handler import start_handler
+from handlers.saldo_handler import saldo_callback
+from handlers.tabungan_handler import (
     tabungan_menu_callback,
     tabungan_list_callback,
     tabungan_add_income_callback,
     tabungan_add_expense_callback,
     handle_savings_input,
 )
-from bot.handlers.pinjaman_handler import (
+from handlers.pinjaman_handler import (
     pinjaman_menu_callback,
     pinjaman_list_callback,
     pinjaman_add_callback,
@@ -15,7 +15,7 @@ from bot.handlers.pinjaman_handler import (
     handle_loan_input,
     handle_payment_input,
 )
-from bot.handlers.target_handler import (
+from handlers.target_handler import (
     target_menu_callback,
     target_list_callback,
     target_add_callback,
