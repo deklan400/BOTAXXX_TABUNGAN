@@ -4,7 +4,8 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { SavingsForm } from '../components/forms/SavingsForm';
 import { savingsAPI, Savings } from '../api/savingsAPI';
-import { formatRupiah, formatDate } from '../utils';
+import { formatRupiah } from '../utils/formatRupiah';
+import { formatDate } from '../utils/date';
 import { useModal } from '../hooks/useModal';
 
 export const SavingsPage: React.FC = () => {
@@ -79,7 +80,7 @@ export const SavingsPage: React.FC = () => {
           title={editing ? 'Edit Transaction' : 'Add Transaction'}
         >
           <SavingsForm
-            initialData={editing}
+            initialData={editing || undefined}
             onSubmit={editing ? handleUpdate : handleCreate}
             onCancel={() => {
               modal.close();

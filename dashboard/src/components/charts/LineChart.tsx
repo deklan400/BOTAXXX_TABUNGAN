@@ -3,12 +3,12 @@ import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 
 interface LineChartProps {
   data: any[];
-  dataKey: string;
+  dataKey?: string;
   xKey: string;
   lines: { key: string; name: string; color: string }[];
 }
 
-export const LineChart: React.FC<LineChartProps> = ({ data, dataKey, xKey, lines }) => {
+export const LineChart: React.FC<LineChartProps> = ({ data, xKey, lines }) => {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <RechartsLineChart data={data}>

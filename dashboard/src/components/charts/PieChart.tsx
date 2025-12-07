@@ -22,7 +22,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data, colors = DEFAULT_COLOR
           fill="#8884d8"
           dataKey="value"
         >
-          {data.map((entry, index) => (
+          {data.map((_, index) => (
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Pie>

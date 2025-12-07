@@ -77,6 +77,10 @@ ALTER ROLE botaxxx SET client_encoding TO 'utf8';
 ALTER ROLE botaxxx SET default_transaction_isolation TO 'read committed';
 ALTER ROLE botaxxx SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE botaxxx_db TO botaxxx;
+\c botaxxx_db
+GRANT ALL ON SCHEMA public TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO botaxxx;
 \q
 EOF
 ```
@@ -349,6 +353,33 @@ cd /var/www/botaxxx/backend
 source venv/bin/activate
 pip install -r requirements.txt
 # Lihat FIX_PIP_ERROR.md untuk solusi lengkap
+```
+
+**PostgreSQL permission error:**
+```bash
+# Jika error "permission denied for schema public"
+sudo -u postgres psql << EOF
+\c botaxxx_db
+GRANT ALL ON SCHEMA public TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO botaxxx;
+\q
+EOF
+# Lihat FIX_POSTGRES_PERMISSION.md untuk solusi lengkap
+```
+
+**PostgreSQL password authentication error:**
+```bash
+# Jika error "password authentication failed"
+# Reset password database
+sudo -u postgres psql -c "ALTER USER botaxxx WITH PASSWORD 'your_password';"
+
+# Update .env file dengan password yang sama
+nano /var/www/botaxxx/backend/.env
+# Update DATABASE_URL dengan password yang benar
+
+# Test koneksi
+PGPASSWORD='your_password' psql -U botaxxx -d botaxxx_db -h localhost -c "SELECT 1;"
+# Lihat FIX_POSTGRES_PASSWORD.md untuk solusi lengkap
 ```
 
 **Nginx error:**

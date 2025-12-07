@@ -4,7 +4,8 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { TargetForm } from '../components/forms/TargetForm';
 import { targetsAPI, Target } from '../api/targetsAPI';
-import { formatRupiah, formatDate } from '../utils';
+import { formatRupiah } from '../utils/formatRupiah';
+import { formatDate } from '../utils/date';
 import { useModal } from '../hooks/useModal';
 
 export const TargetsPage: React.FC = () => {
@@ -61,7 +62,7 @@ export const TargetsPage: React.FC = () => {
         </div>
 
         <Modal isOpen={modal.isOpen} onClose={() => { modal.close(); setEditing(null); }} title={editing ? 'Edit Target' : 'Add Target'}>
-          <TargetForm initialData={editing} onSubmit={editing ? handleUpdate : handleCreate} onCancel={() => { modal.close(); setEditing(null); }} isEdit={!!editing} />
+          <TargetForm initialData={editing || undefined} onSubmit={editing ? handleUpdate : handleCreate} onCancel={() => { modal.close(); setEditing(null); }} isEdit={!!editing} />
         </Modal>
 
         {error && (

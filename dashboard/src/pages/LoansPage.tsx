@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { LoanForm } from '../components/forms/LoanForm';
 import { loansAPI, Loan } from '../api/loansAPI';
-import { formatRupiah, formatDate } from '../utils';
+import { formatRupiah } from '../utils/formatRupiah';
 import { useModal } from '../hooks/useModal';
 
 export const LoansPage: React.FC = () => {
@@ -61,7 +61,7 @@ export const LoansPage: React.FC = () => {
         </div>
 
         <Modal isOpen={modal.isOpen} onClose={() => { modal.close(); setEditing(null); }} title={editing ? 'Edit Loan' : 'Add Loan'}>
-          <LoanForm initialData={editing} onSubmit={editing ? handleUpdate : handleCreate} onCancel={() => { modal.close(); setEditing(null); }} isEdit={!!editing} />
+          <LoanForm initialData={editing || undefined} onSubmit={editing ? handleUpdate : handleCreate} onCancel={() => { modal.close(); setEditing(null); }} isEdit={!!editing} />
         </Modal>
 
         {error && (

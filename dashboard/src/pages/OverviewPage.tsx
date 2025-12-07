@@ -3,7 +3,6 @@ import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { StatCard } from '../components/cards/StatCard';
 import { LineChart } from '../components/charts/LineChart';
 import axiosClient from '../api/axiosClient';
-import { formatRupiah } from '../utils/formatRupiah';
 
 export const OverviewPage: React.FC = () => {
   const [overview, setOverview] = useState<any>(null);

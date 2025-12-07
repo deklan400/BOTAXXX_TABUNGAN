@@ -202,6 +202,10 @@ ALTER ROLE botaxxx SET client_encoding TO 'utf8';
 ALTER ROLE botaxxx SET default_transaction_isolation TO 'read committed';
 ALTER ROLE botaxxx SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE botaxxx_db TO botaxxx;
+\c botaxxx_db
+GRANT ALL ON SCHEMA public TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO botaxxx;
 \q
 EOF
 ```
@@ -214,11 +218,20 @@ Database Password: _________________
 ### 4.2 Test Koneksi Database
 
 ```bash
-# Test koneksi (akan meminta password)
+# Test koneksi dengan password (gunakan password yang Anda catat)
+PGPASSWORD='YOUR_DB_PASSWORD' psql -U botaxxx -d botaxxx_db -h localhost -c "SELECT 1;"
+
+# Atau test interaktif (akan meminta password)
 psql -U botaxxx -d botaxxx_db -h localhost
 ```
 
-Jika berhasil, Anda akan masuk ke PostgreSQL prompt. Ketik `\q` untuk keluar.
+**⚠️ PENTING:** Gunakan password yang sama dengan yang Anda catat di step 4.1!
+
+Jika berhasil, Anda akan melihat output `?column?` dengan nilai `1`, atau masuk ke PostgreSQL prompt. Ketik `\q` untuk keluar.
+
+**Jika error "password authentication failed":**
+- Pastikan password yang digunakan sama dengan yang di-set saat create user
+- Lihat `FIX_POSTGRES_PASSWORD.md` untuk solusi lengkap
 
 ---
 
@@ -347,6 +360,13 @@ INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.migration] Running upgrade  -> 001_initial_migration, Initial migration
 ```
+
+**⚠️ Jika error "password authentication failed":**
+1. Pastikan password di `.env` file sama dengan password database
+2. Check password database: `sudo -u postgres psql -c "\du botaxxx"`
+3. Reset password jika perlu: `sudo -u postgres psql -c "ALTER USER botaxxx WITH PASSWORD 'new_password';"`
+4. Update `.env` file dengan password yang benar
+5. Lihat `FIX_POSTGRES_PASSWORD.md` untuk solusi lengkap
 
 ### 6.6 Test Backend (Optional)
 
@@ -993,6 +1013,28 @@ psql -U botaxxx -d botaxxx_db -h localhost
 # Check database exists
 sudo -u postgres psql -l
 ```
+
+### Permission denied for schema public
+
+Jika muncul error `permission denied for schema public` saat migration:
+
+```bash
+# Grant CREATE privilege pada schema public
+sudo -u postgres psql << EOF
+\c botaxxx_db
+GRANT ALL ON SCHEMA public TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO botaxxx;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO botaxxx;
+\q
+EOF
+
+# Jalankan migration lagi
+cd /var/www/botaxxx/backend
+source venv/bin/activate
+alembic upgrade head
+```
+
+**Lihat `FIX_POSTGRES_PERMISSION.md` untuk solusi lengkap.**
 
 ### SSL Certificate error
 
