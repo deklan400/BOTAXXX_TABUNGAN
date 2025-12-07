@@ -206,6 +206,55 @@ python main.py
 2. Set `TELEGRAM_BOT_TOKEN` in `bot/.env`
 3. Started the backend server (the bot needs the API to be running)
 
+---
+
+## 🚀 VPS Deployment
+
+### Quick Start
+
+Untuk deploy ke VPS, ada 2 opsi:
+
+#### Opsi 1: Automated Script (Recommended)
+
+```bash
+# Login ke VPS
+ssh root@your-vps-ip
+
+# Clone repository
+git clone https://github.com/deklan400/BOTAXXX_TABUNGAN.git
+cd BOTAXXX_TABUNGAN
+
+# Jalankan deployment script
+chmod +x deploy-vps.sh
+sudo bash deploy-vps.sh
+```
+
+#### Opsi 2: Manual Setup
+
+Ikuti panduan lengkap di:
+- **📖 [SETUP_VPS_LENGKAP.md](SETUP_VPS_LENGKAP.md)** - Panduan lengkap step-by-step dari 0 ke VPS
+- **⚡ [QUICK_REFERENCE_VPS.md](QUICK_REFERENCE_VPS.md)** - Quick reference untuk setup cepat
+- **📚 [DEPLOY_VPS.md](DEPLOY_VPS.md)** - Dokumentasi deployment detail
+- **🚀 [QUICK_START_VPS.md](QUICK_START_VPS.md)** - Quick start guide
+
+### Dokumentasi VPS
+
+| File | Deskripsi |
+|------|-----------|
+| `SETUP_VPS_LENGKAP.md` | Panduan lengkap step-by-step dari awal sampai production-ready |
+| `QUICK_REFERENCE_VPS.md` | Quick reference untuk setup cepat |
+| `DEPLOY_VPS.md` | Dokumentasi deployment detail dengan troubleshooting |
+| `QUICK_START_VPS.md` | Quick start guide untuk deployment cepat |
+
+### Prerequisites untuk VPS
+
+- Ubuntu 20.04/22.04 atau Debian 11/12
+- Root access atau user dengan sudo privileges
+- Domain name (untuk SSL)
+- Telegram Bot Token dari @BotFather
+
+---
+
 ## 🧪 Testing
 
 ### Backend Tests
