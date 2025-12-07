@@ -409,9 +409,17 @@ sleep 5
 BACKEND_READY=false
 for i in {1..30}; do
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-        print_success "Backend is ready!"
-        BACKEND_READY=true
-        break
+        # Test if API endpoint is actually accessible
+        sleep 2
+        if curl -s -X POST http://localhost:8000/auth/telegram-login \
+            -H "Content-Type: application/json" \
+            -d '{"telegram_id":"test"}' 2>&1 | grep -q "not found\|Telegram ID not found"; then
+            print_success "Backend is ready and API endpoints are accessible!"
+            BACKEND_READY=true
+            break
+        else
+            print_info "Backend health check passed, waiting for API endpoints to be ready..."
+        fi
     fi
     if [ $i -lt 30 ]; then
         sleep 2
@@ -419,18 +427,29 @@ for i in {1..30}; do
 done
 
 if [ "$BACKEND_READY" = false ]; then
-    print_error "Backend failed to start or is not responding!"
+    print_error "Backend failed to start or API endpoints not ready!"
     print_info "Check backend logs: sudo journalctl -u botaxxx-backend -n 50"
     print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
     print_warning "Continuing with installation, but backend may need manual fixing"
+    print_info "You may need to restart backend: sudo systemctl restart botaxxx-backend"
 fi
 
 # Start bot (only if backend is ready and Telegram token is set)
 if [ "$BACKEND_READY" = true ]; then
     if [ ! -z "$TELEGRAM_TOKEN" ] && [ "$TELEGRAM_TOKEN" != "your-telegram-bot-token-here" ]; then
         print_info "Starting bot service..."
+        # Wait a bit more to ensure backend is fully ready
+        sleep 3
         if systemctl start botaxxx-bot; then
             print_success "Bot service started"
+            # Wait and check if bot started successfully
+            sleep 3
+            if systemctl is-active --quiet botaxxx-bot; then
+                print_success "Bot service is running"
+            else
+                print_warning "Bot service started but may have errors"
+                print_info "Check logs: sudo journalctl -u botaxxx-bot -n 20"
+            fi
         else
             print_warning "Failed to start bot service"
             print_info "Check logs: sudo journalctl -u botaxxx-bot -n 50"
@@ -442,6 +461,7 @@ if [ "$BACKEND_READY" = true ]; then
 else
     print_warning "Bot service not started - Backend is not ready"
     print_info "Fix backend first, then start bot: sudo systemctl start botaxxx-bot"
+    print_info "Or restart both: sudo systemctl restart botaxxx-backend && sleep 5 && sudo systemctl restart botaxxx-bot"
 fi
 
 # Step 14: Setup Nginx
