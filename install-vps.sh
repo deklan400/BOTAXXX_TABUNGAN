@@ -52,8 +52,19 @@ read -p "Enter email for SSL certificate (optional, press Enter to skip SSL): " 
 read -p "Enter Telegram Bot Token from @BotFather (optional, can add later): " TELEGRAM_TOKEN
 
 if [ -z "$DOMAIN" ]; then
-    DOMAIN=$(curl -s ifconfig.me)
-    print_warning "Using VPS IP: $DOMAIN"
+    # Try to get IPv4 address first, fallback to IPv6
+    DOMAIN=$(curl -s -4 ifconfig.me 2>/dev/null || curl -s ifconfig.me)
+    if [[ $DOMAIN == *":"* ]]; then
+        # IPv6 address, format with brackets for URL
+        DOMAIN_FORMATTED="[$DOMAIN]"
+        print_warning "Using VPS IPv6: $DOMAIN"
+        print_info "Note: Use [$DOMAIN] in browser URLs, or use IPv4 if available"
+    else
+        DOMAIN_FORMATTED="$DOMAIN"
+        print_warning "Using VPS IP: $DOMAIN"
+    fi
+else
+    DOMAIN_FORMATTED="$DOMAIN"
 fi
 
 if [ -z "$API_DOMAIN" ]; then
@@ -609,7 +620,12 @@ else
 fi
 echo ""
 echo "  3. Register user:"
-echo "     - Via dashboard: http://$DOMAIN/register"
+if [[ $DOMAIN == *":"* ]]; then
+    echo "     - Via dashboard: http://[$DOMAIN]/register"
+    echo "     - Or use IPv4: http://$(curl -s -4 ifconfig.me 2>/dev/null || echo 'YOUR_IPV4')/register"
+else
+    echo "     - Via dashboard: http://$DOMAIN/register"
+fi
 echo "     - Via API: curl -X POST http://localhost:8000/auth/register \\"
 echo "                -H 'Content-Type: application/json' \\"
 echo "                -d '{\"name\":\"Your Name\",\"email\":\"your@email.com\",\"password\":\"yourpassword\"}'"
@@ -628,12 +644,23 @@ echo "  - Backend logs: sudo journalctl -u botaxxx-backend -f"
 echo "  - Bot logs: sudo journalctl -u botaxxx-bot -f"
 echo "  - Backend error log: sudo tail -f /var/log/botaxxx/backend.error.log"
 echo "  - Bot error log: sudo tail -f /var/log/botaxxx/bot.error.log"
+echo "  - If bot gets 404, restart backend: sudo systemctl restart botaxxx-backend"
 echo ""
 print_info "Access URLs:"
-echo "  Frontend: http://$DOMAIN"
-echo "  API: http://$API_DOMAIN"
-echo "  API Docs: http://$API_DOMAIN/docs"
-echo "  Health: http://$API_DOMAIN/health"
+if [[ $DOMAIN == *":"* ]]; then
+    echo "  Frontend: http://[$DOMAIN]"
+    echo "  API: http://[$API_DOMAIN]"
+    echo "  API Docs: http://[$API_DOMAIN]/docs"
+    echo "  Health: http://[$API_DOMAIN]/health"
+    echo ""
+    echo "  Note: IPv6 addresses need brackets in browser URLs!"
+    echo "  Or use IPv4: http://$(curl -s -4 ifconfig.me 2>/dev/null || echo 'YOUR_IPV4')"
+else
+    echo "  Frontend: http://$DOMAIN"
+    echo "  API: http://$API_DOMAIN"
+    echo "  API Docs: http://$API_DOMAIN/docs"
+    echo "  Health: http://$API_DOMAIN/health"
+fi
 echo ""
 if [ -z "$SSL_EMAIL" ]; then
     print_warning "SSL not configured. To setup SSL later: sudo certbot --nginx"
