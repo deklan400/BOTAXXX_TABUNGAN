@@ -127,9 +127,11 @@ ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
 ALTER ROLE $DB_USER SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 \c $DB_NAME
+GRANT CREATE ON SCHEMA public TO $DB_USER;
 GRANT ALL ON SCHEMA public TO $DB_USER;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $DB_USER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO $DB_USER;
 \q
 EOF
 
@@ -199,9 +201,9 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://$API_DOMAIN/auth/google/callback
 
-# CORS
-CORS_ORIGINS=https://$DOMAIN,https://www.$DOMAIN
-FRONTEND_URL=https://$DOMAIN
+# CORS (support both HTTP and HTTPS)
+CORS_ORIGINS=http://$DOMAIN,https://$DOMAIN,http://www.$DOMAIN,https://www.$DOMAIN
+FRONTEND_URL=http://$DOMAIN
 
 # Rate Limiting
 RATE_LIMIT_ENABLED=True
@@ -210,10 +212,40 @@ EOF
 
 chown $APP_USER:$APP_USER .env
 
+# Test database connection before migrations
+print_info "Testing database connection..."
+source venv/bin/activate
+python3.11 -c "
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from sqlalchemy import create_engine, text
+try:
+    engine = create_engine(os.getenv('DATABASE_URL'))
+    with engine.connect() as conn:
+        result = conn.execute(text('SELECT 1'))
+        print('Database connection successful!')
+except Exception as e:
+    print(f'Database connection failed: {e}')
+    exit(1)
+" || {
+    print_error "Database connection failed! Check DATABASE_URL in .env"
+    exit 1
+}
+
 # Run migrations
 print_info "Running database migrations..."
 source venv/bin/activate
-alembic upgrade head || print_warning "Migrations may have failed, check manually"
+if alembic upgrade head; then
+    print_success "Database migrations completed successfully"
+else
+    print_error "Database migrations failed!"
+    print_info "Check error logs above. Common issues:"
+    print_info "1. Database permissions - ensure user has CREATE privilege"
+    print_info "2. Database connection - check DATABASE_URL in .env"
+    print_info "3. Run manually: cd $APP_DIR/backend && source venv/bin/activate && alembic upgrade head"
+    exit 1
+fi
 
 # Step 11: Setup Frontend
 print_info "Step 11/13: Setting up frontend..."
@@ -227,7 +259,14 @@ EOF
 
 # Build frontend
 print_info "Building frontend..."
-npm run build || print_error "Frontend build failed, check manually"
+if npm run build; then
+    print_success "Frontend build completed successfully"
+else
+    print_error "Frontend build failed!"
+    print_info "This may be due to TypeScript errors or missing dependencies"
+    print_info "You can build manually later: cd $APP_DIR/dashboard && npm run build"
+    print_warning "Continuing with installation, but frontend may not work until built"
+fi
 
 # Step 12: Setup Bot
 print_info "Step 12/13: Setting up bot..."
@@ -320,24 +359,42 @@ systemctl start botaxxx-backend || print_error "Failed to start backend"
 # Wait for backend to be ready
 print_info "Waiting for backend to be ready..."
 sleep 5
+BACKEND_READY=false
 for i in {1..30}; do
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
         print_success "Backend is ready!"
+        BACKEND_READY=true
         break
     fi
-    if [ $i -eq 30 ]; then
-        print_warning "Backend may not be ready yet, but continuing..."
-    else
+    if [ $i -lt 30 ]; then
         sleep 2
     fi
 done
 
-# Start bot (only if backend is ready or Telegram token is set)
-if [ ! -z "$TELEGRAM_TOKEN" ] && [ "$TELEGRAM_TOKEN" != "your-telegram-bot-token-here" ]; then
-    print_info "Starting bot service..."
-    systemctl start botaxxx-bot || print_warning "Failed to start bot (check Telegram token)"
+if [ "$BACKEND_READY" = false ]; then
+    print_error "Backend failed to start or is not responding!"
+    print_info "Check backend logs: sudo journalctl -u botaxxx-backend -n 50"
+    print_info "Check error log: sudo tail -50 /var/log/botaxxx/backend.error.log"
+    print_warning "Continuing with installation, but backend may need manual fixing"
+fi
+
+# Start bot (only if backend is ready and Telegram token is set)
+if [ "$BACKEND_READY" = true ]; then
+    if [ ! -z "$TELEGRAM_TOKEN" ] && [ "$TELEGRAM_TOKEN" != "your-telegram-bot-token-here" ]; then
+        print_info "Starting bot service..."
+        if systemctl start botaxxx-bot; then
+            print_success "Bot service started"
+        else
+            print_warning "Failed to start bot service"
+            print_info "Check logs: sudo journalctl -u botaxxx-bot -n 50"
+        fi
+    else
+        print_warning "Bot service not started - Telegram token not set"
+        print_info "Edit $APP_DIR/bot/.env and add TELEGRAM_BOT_TOKEN, then run: sudo systemctl start botaxxx-bot"
+    fi
 else
-    print_warning "Bot service not started - Telegram token not set. Set it in bot/.env and restart."
+    print_warning "Bot service not started - Backend is not ready"
+    print_info "Fix backend first, then start bot: sudo systemctl start botaxxx-bot"
 fi
 
 # Step 14: Setup Nginx
@@ -488,14 +545,28 @@ print_info "Deployment information saved to: $APP_DIR/deployment_info.txt"
 echo ""
 print_info "Next steps:"
 echo "  1. Check deployment info: cat $APP_DIR/deployment_info.txt"
+echo "     Database password: $DB_PASSWORD"
+echo ""
 if [ -z "$TELEGRAM_TOKEN" ] || [ "$TELEGRAM_TOKEN" = "your-telegram-bot-token-here" ]; then
     echo "  2. ⚠️  IMPORTANT: Edit $APP_DIR/bot/.env and add your TELEGRAM_BOT_TOKEN"
     echo "     Then restart bot: sudo systemctl restart botaxxx-bot"
 else
     echo "  2. ✅ Telegram token already set"
 fi
-echo "  3. Register user in dashboard: http://$DOMAIN/register"
-echo "  4. Set your Telegram ID in profile settings after registration"
+echo ""
+echo "  3. Register user:"
+echo "     - Via dashboard: http://$DOMAIN/register"
+echo "     - Via API: curl -X POST http://localhost:8000/auth/register \\"
+echo "                -H 'Content-Type: application/json' \\"
+echo "                -d '{\"name\":\"Your Name\",\"email\":\"your@email.com\",\"password\":\"yourpassword\"}'"
+echo ""
+echo "  4. Set Telegram ID:"
+echo "     - Login to dashboard and go to Profile settings"
+echo "     - Or via API after login: curl -X PUT http://localhost:8000/users/profile \\"
+echo "                              -H 'Authorization: Bearer YOUR_TOKEN' \\"
+echo "                              -H 'Content-Type: application/json' \\"
+echo "                              -d '{\"telegram_id\":\"YOUR_TELEGRAM_ID\"}'"
+echo ""
 echo "  5. Test bot: Send /start to your bot in Telegram"
 echo ""
 print_info "Troubleshooting:"
