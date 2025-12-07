@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LoginPage, RegisterPage, GoogleCallbackPage } from './pages/auth';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { GoogleCallbackPage } from './pages/auth/GoogleCallbackPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { SavingsPage } from './pages/SavingsPage';
 import { LoansPage } from './pages/LoansPage';

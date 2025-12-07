@@ -1,4 +1,6 @@
-export * from './auth';
+export * from './auth/LoginPage';
+export * from './auth/RegisterPage';
+export * from './auth/GoogleCallbackPage';
 export * from './OverviewPage';
 export * from './SavingsPage';
 export * from './LoansPage';
