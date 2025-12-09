@@ -6,14 +6,14 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
 
   return (
-    <div className="bg-white shadow-md px-6 py-4 flex items-center justify-between">
+    <div className="bg-slate-800 border-b border-slate-700 shadow-md px-6 py-4 flex items-center justify-between">
       <div className="flex items-center">
-        <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
+        <h2 className="text-xl font-semibold text-white">Dashboard</h2>
       </div>
       <div className="flex items-center space-x-4">
         {user && (
           <>
-            <span className="text-gray-700">{user.name}</span>
+            <span className="text-gray-300">{user.name}</span>
             <Button variant="outline" size="sm" onClick={logout}>
               Logout
             </Button>

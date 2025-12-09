@@ -13,18 +13,18 @@ interface StatCardProps {
 
 export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{formatRupiah(value)}</p>
+          <p className="text-gray-400 text-sm font-medium">{title}</p>
+          <p className="text-2xl font-bold text-white mt-2">{formatRupiah(value)}</p>
           {trend && (
-            <p className={`text-sm mt-1 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm mt-1 ${trend.isPositive ? 'text-green-400' : 'text-red-400'}`}>
               {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
             </p>
           )}
         </div>
-        {icon && <div className="text-4xl text-primary-500">{icon}</div>}
+        {icon && <div className="text-4xl text-primary-400">{icon}</div>}
       </div>
     </div>
   );
