@@ -6,39 +6,60 @@ from utils.formatter import format_target
 from services.api_client import APIClient
 
 
-async def target_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def target_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle target menu"""
     query = update.callback_query
-    await query.answer()
+    
+    if query:
+        await query.answer()
+        await query.edit_message_text("🎯 Target Menu", reply_markup=get_target_menu_keyboard())
+    elif update.message:
+        await update.message.reply_text("🎯 Target Menu", reply_markup=get_target_menu_keyboard())
 
-    await query.edit_message_text("🎯 Target Menu", reply_markup=get_target_menu_keyboard())
 
-
-async def target_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def target_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle list targets"""
     query = update.callback_query
-    await query.answer()
-
     user_id = update.effective_user.id
-    api_client = state_manager.get_data(user_id, "api_client")
+    token = state_manager.get_data(user_id, "token")
 
-    if not api_client:
-        await query.edit_message_text("❌ Not authenticated")
+    if not token:
+        error_msg = "❌ Not authenticated"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg)
+        elif update.message:
+            await update.message.reply_text(error_msg)
         return
 
+    api_client = APIClient(token=token)
     try:
         targets = await api_client.list_targets(limit=10)
         if not targets:
-            await query.edit_message_text("No targets found.", reply_markup=get_target_menu_keyboard())
+            msg = "No targets found."
+            if query:
+                await query.answer()
+                await query.edit_message_text(msg, reply_markup=get_target_menu_keyboard())
+            elif update.message:
+                await update.message.reply_text(msg, reply_markup=get_target_menu_keyboard())
             return
 
         text = "📋 Targets:\n\n"
         for target in targets[:5]:
             text += f"{format_target(target)}\n\n"
 
-        await query.edit_message_text(text, reply_markup=get_target_menu_keyboard())
+        if query:
+            await query.answer()
+            await query.edit_message_text(text, reply_markup=get_target_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(text, reply_markup=get_target_menu_keyboard())
     except Exception as e:
-        await query.edit_message_text(f"❌ Error: {str(e)}", reply_markup=get_target_menu_keyboard())
+        error_msg = f"❌ Error: {str(e)}"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg, reply_markup=get_target_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(error_msg, reply_markup=get_target_menu_keyboard())
 
 
 async def target_add_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

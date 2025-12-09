@@ -102,32 +102,25 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Handle reply keyboard commands
         if text in ["💰 Saldo", "Saldo"]:
             from handlers.saldo_handler import saldo_callback
-            update.callback_query = FakeQuery(update)
-            await saldo_callback(update, context)
+            await saldo_callback(update, context, is_keyboard_button=True)
         elif text in ["📂 Tabungan", "Tabungan"]:
             from handlers.tabungan_handler import tabungan_menu_callback
-            update.callback_query = FakeQuery(update)
-            await tabungan_menu_callback(update, context)
+            await tabungan_menu_callback(update, context, is_keyboard_button=True)
         elif text in ["📑 Pinjaman", "Pinjaman"]:
             from handlers.pinjaman_handler import pinjaman_menu_callback
-            update.callback_query = FakeQuery(update)
-            await pinjaman_menu_callback(update, context)
+            await pinjaman_menu_callback(update, context, is_keyboard_button=True)
         elif text in ["🎯 Target", "Target"]:
             from handlers.target_handler import target_menu_callback
-            update.callback_query = FakeQuery(update)
-            await target_menu_callback(update, context)
+            await target_menu_callback(update, context, is_keyboard_button=True)
         elif text == "📋 List Tabungan":
             from handlers.tabungan_handler import tabungan_list_callback
-            update.callback_query = FakeQuery(update)
-            await tabungan_list_callback(update, context)
+            await tabungan_list_callback(update, context, is_keyboard_button=True)
         elif text == "📋 List Pinjaman":
             from handlers.pinjaman_handler import pinjaman_list_callback
-            update.callback_query = FakeQuery(update)
-            await pinjaman_list_callback(update, context)
+            await pinjaman_list_callback(update, context, is_keyboard_button=True)
         elif text == "📋 List Target":
             from handlers.target_handler import target_list_callback
-            update.callback_query = FakeQuery(update)
-            await target_list_callback(update, context)
+            await target_list_callback(update, context, is_keyboard_button=True)
         elif text in ["🏠 Menu Utama", "Menu Utama"]:
             await update.message.reply_text(
                 "Select an option:",

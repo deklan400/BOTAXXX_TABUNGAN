@@ -7,39 +7,60 @@ from utils.formatter import format_loan
 from services.api_client import APIClient
 
 
-async def pinjaman_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def pinjaman_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle pinjaman menu"""
     query = update.callback_query
-    await query.answer()
+    
+    if query:
+        await query.answer()
+        await query.edit_message_text("📑 Pinjaman Menu", reply_markup=get_pinjaman_menu_keyboard())
+    elif update.message:
+        await update.message.reply_text("📑 Pinjaman Menu", reply_markup=get_pinjaman_menu_keyboard())
 
-    await query.edit_message_text("📑 Pinjaman Menu", reply_markup=get_pinjaman_menu_keyboard())
 
-
-async def pinjaman_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def pinjaman_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle list pinjaman"""
     query = update.callback_query
-    await query.answer()
-
     user_id = update.effective_user.id
-    api_client = state_manager.get_data(user_id, "api_client")
+    token = state_manager.get_data(user_id, "token")
 
-    if not api_client:
-        await query.edit_message_text("❌ Not authenticated")
+    if not token:
+        error_msg = "❌ Not authenticated"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg)
+        elif update.message:
+            await update.message.reply_text(error_msg)
         return
 
+    api_client = APIClient(token=token)
     try:
         loans = await api_client.list_loans(limit=10)
         if not loans:
-            await query.edit_message_text("No loans found.", reply_markup=get_pinjaman_menu_keyboard())
+            msg = "No loans found."
+            if query:
+                await query.answer()
+                await query.edit_message_text(msg, reply_markup=get_pinjaman_menu_keyboard())
+            elif update.message:
+                await update.message.reply_text(msg, reply_markup=get_pinjaman_menu_keyboard())
             return
 
         text = "📋 Loans:\n\n"
         for loan in loans[:5]:
             text += f"{format_loan(loan)}\n\n"
 
-        await query.edit_message_text(text, reply_markup=get_pinjaman_menu_keyboard())
+        if query:
+            await query.answer()
+            await query.edit_message_text(text, reply_markup=get_pinjaman_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(text, reply_markup=get_pinjaman_menu_keyboard())
     except Exception as e:
-        await query.edit_message_text(f"❌ Error: {str(e)}", reply_markup=get_pinjaman_menu_keyboard())
+        error_msg = f"❌ Error: {str(e)}"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg, reply_markup=get_pinjaman_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(error_msg, reply_markup=get_pinjaman_menu_keyboard())
 
 
 async def pinjaman_add_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

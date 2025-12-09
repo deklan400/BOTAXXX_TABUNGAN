@@ -7,40 +7,60 @@ from utils.formatter import format_savings, format_rupiah
 from services.api_client import APIClient
 
 
-async def tabungan_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def tabungan_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle tabungan menu"""
     query = update.callback_query
-    await query.answer()
+    
+    if query:
+        await query.answer()
+        await query.edit_message_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
+    elif update.message:
+        await update.message.reply_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
 
-    await query.edit_message_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
 
-
-async def tabungan_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def tabungan_list_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_keyboard_button: bool = False):
     """Handle list tabungan"""
     query = update.callback_query
-    await query.answer()
-
     user_id = update.effective_user.id
     token = state_manager.get_data(user_id, "token")
     
     if not token:
-        await query.edit_message_text("❌ Not authenticated")
+        error_msg = "❌ Not authenticated"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg)
+        elif update.message:
+            await update.message.reply_text(error_msg)
         return
 
     api_client = APIClient(token=token)
     try:
         savings = await api_client.list_savings(limit=10)
         if not savings:
-            await query.edit_message_text("No savings transactions found.", reply_markup=get_tabungan_menu_keyboard())
+            msg = "No savings transactions found."
+            if query:
+                await query.answer()
+                await query.edit_message_text(msg, reply_markup=get_tabungan_menu_keyboard())
+            elif update.message:
+                await update.message.reply_text(msg, reply_markup=get_tabungan_menu_keyboard())
             return
 
         text = "📋 Recent Savings:\n\n"
         for s in savings[:5]:
             text += f"{format_savings(s)}\n\n"
 
-        await query.edit_message_text(text, reply_markup=get_tabungan_menu_keyboard())
+        if query:
+            await query.answer()
+            await query.edit_message_text(text, reply_markup=get_tabungan_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(text, reply_markup=get_tabungan_menu_keyboard())
     except Exception as e:
-        await query.edit_message_text(f"❌ Error: {str(e)}", reply_markup=get_tabungan_menu_keyboard())
+        error_msg = f"❌ Error: {str(e)}"
+        if query:
+            await query.answer()
+            await query.edit_message_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
+        elif update.message:
+            await update.message.reply_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
 
 
 async def tabungan_add_income_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
