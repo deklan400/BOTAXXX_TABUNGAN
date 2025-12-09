@@ -33,7 +33,7 @@ from handlers.target_handler import (
     handle_target_input,
 )
 from utils.state_manager import state_manager
-from utils.keyboards import get_main_menu_keyboard
+from utils.keyboards import get_main_menu_keyboard, get_reply_keyboard
 
 
 load_dotenv()
@@ -61,10 +61,32 @@ async def menu_main_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.edit_message_text("Select an option:", reply_markup=get_main_menu_keyboard())
 
 
+class FakeQuery:
+    """Helper class to convert message to callback query"""
+    def __init__(self, update):
+        self.update = update
+    async def answer(self):
+        pass
+    async def edit_message_text(self, text, *args, **kwargs):
+        """Edit message text - for message handler, just reply"""
+        if self.update.message:
+            # Remove reply_markup from kwargs if present, we'll add reply keyboard separately
+            reply_markup = kwargs.pop('reply_markup', None)
+            await self.update.message.reply_text(text, *args, **kwargs)
+            # Add reply keyboard if main menu
+            if reply_markup:
+                from utils.keyboards import get_reply_keyboard
+                await self.update.message.reply_text(
+                    "Atau gunakan menu di bawah:",
+                    reply_markup=get_reply_keyboard(),
+                )
+
+
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle text messages"""
     user_id = update.effective_user.id
     waiting_for = state_manager.get_waiting_for(user_id)
+    text = update.message.text if update.message else ""
 
     if waiting_for:
         # Handle form inputs
@@ -77,10 +99,49 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif waiting_for.startswith("target") or waiting_for.startswith("update_target"):
             await handle_target_input(update, context)
     else:
-        await update.message.reply_text(
-            "Use /start to begin or select an option:",
-            reply_markup=get_main_menu_keyboard(),
-        )
+        # Handle reply keyboard commands
+        if text in ["💰 Saldo", "Saldo"]:
+            from handlers.saldo_handler import saldo_callback
+            update.callback_query = FakeQuery(update)
+            await saldo_callback(update, context)
+        elif text in ["📂 Tabungan", "Tabungan"]:
+            from handlers.tabungan_handler import tabungan_menu_callback
+            update.callback_query = FakeQuery(update)
+            await tabungan_menu_callback(update, context)
+        elif text in ["📑 Pinjaman", "Pinjaman"]:
+            from handlers.pinjaman_handler import pinjaman_menu_callback
+            update.callback_query = FakeQuery(update)
+            await pinjaman_menu_callback(update, context)
+        elif text in ["🎯 Target", "Target"]:
+            from handlers.target_handler import target_menu_callback
+            update.callback_query = FakeQuery(update)
+            await target_menu_callback(update, context)
+        elif text == "📋 List Tabungan":
+            from handlers.tabungan_handler import tabungan_list_callback
+            update.callback_query = FakeQuery(update)
+            await tabungan_list_callback(update, context)
+        elif text == "📋 List Pinjaman":
+            from handlers.pinjaman_handler import pinjaman_list_callback
+            update.callback_query = FakeQuery(update)
+            await pinjaman_list_callback(update, context)
+        elif text == "📋 List Target":
+            from handlers.target_handler import target_list_callback
+            update.callback_query = FakeQuery(update)
+            await target_list_callback(update, context)
+        elif text in ["🏠 Menu Utama", "Menu Utama"]:
+            await update.message.reply_text(
+                "Select an option:",
+                reply_markup=get_main_menu_keyboard(),
+            )
+            await update.message.reply_text(
+                "Atau gunakan menu di bawah:",
+                reply_markup=get_reply_keyboard(),
+            )
+        else:
+            await update.message.reply_text(
+                "Use /start to begin or select an option:",
+                reply_markup=get_main_menu_keyboard(),
+            )
 
 
 def main():

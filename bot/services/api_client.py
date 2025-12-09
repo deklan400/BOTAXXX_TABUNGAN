@@ -50,7 +50,7 @@ class APIClient:
 
     async def telegram_login(self, telegram_id: str, telegram_username: Optional[str] = None) -> Dict[str, Any]:
         """Login via Telegram ID and get JWT token"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.post(
                 f"{self.base_url}/auth/telegram-login",
                 json={
@@ -66,9 +66,9 @@ class APIClient:
 
     async def get_overview(self) -> Dict[str, Any]:
         """Get financial overview"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(
-                f"{self.base_url}/overview",
+                f"{self.base_url}/overview/",
                 headers=self._get_headers(),
             )
             response.raise_for_status()
@@ -76,9 +76,9 @@ class APIClient:
 
     async def list_savings(self, skip: int = 0, limit: int = 10) -> list:
         """List savings transactions"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(
-                f"{self.base_url}/savings?skip={skip}&limit={limit}",
+                f"{self.base_url}/savings/?skip={skip}&limit={limit}",
                 headers=self._get_headers(),
             )
             response.raise_for_status()
@@ -86,9 +86,9 @@ class APIClient:
 
     async def create_savings(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a savings transaction"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.post(
-                f"{self.base_url}/savings",
+                f"{self.base_url}/savings/",
                 json=data,
                 headers=self._get_headers(),
             )
@@ -97,7 +97,7 @@ class APIClient:
 
     async def get_balance(self) -> Dict[str, Any]:
         """Get balance information"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(
                 f"{self.base_url}/savings/balance",
                 headers=self._get_headers(),
@@ -107,9 +107,9 @@ class APIClient:
 
     async def list_loans(self, skip: int = 0, limit: int = 10) -> list:
         """List loans"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(
-                f"{self.base_url}/loans?skip={skip}&limit={limit}",
+                f"{self.base_url}/loans/?skip={skip}&limit={limit}",
                 headers=self._get_headers(),
             )
             response.raise_for_status()
@@ -117,9 +117,9 @@ class APIClient:
 
     async def create_loan(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a loan"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.post(
-                f"{self.base_url}/loans",
+                f"{self.base_url}/loans/",
                 json=data,
                 headers=self._get_headers(),
             )
@@ -139,9 +139,9 @@ class APIClient:
 
     async def list_targets(self, skip: int = 0, limit: int = 10) -> list:
         """List targets"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(
-                f"{self.base_url}/targets?skip={skip}&limit={limit}",
+                f"{self.base_url}/targets/?skip={skip}&limit={limit}",
                 headers=self._get_headers(),
             )
             response.raise_for_status()
@@ -149,9 +149,9 @@ class APIClient:
 
     async def create_target(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a target"""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.post(
-                f"{self.base_url}/targets",
+                f"{self.base_url}/targets/",
                 json=data,
                 headers=self._get_headers(),
             )

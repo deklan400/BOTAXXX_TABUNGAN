@@ -19,11 +19,17 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state_manager.set_data(update.effective_user.id, "token", api_client.token)
         state_manager.set_data(update.effective_user.id, "authenticated", True)
 
-        from utils.keyboards import get_main_menu_keyboard
+        from utils.keyboards import get_main_menu_keyboard, get_reply_keyboard
 
         await update.message.reply_text(
             "✅ Authenticated! Welcome to BOTAXXX Financial Command Center.\n\nSelect an option:",
             reply_markup=get_main_menu_keyboard(),
+        )
+        
+        # Tambahkan reply keyboard sebagai alternatif
+        await update.message.reply_text(
+            "Atau gunakan menu di bawah:",
+            reply_markup=get_reply_keyboard(),
         )
     except Exception as e:
         await update.message.reply_text(

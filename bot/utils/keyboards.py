@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
 
 def get_main_menu_keyboard():
@@ -53,3 +53,15 @@ def get_cancel_keyboard():
     """Get cancel keyboard"""
     keyboard = [[InlineKeyboardButton("❌ Cancel", callback_data="cancel")]]
     return InlineKeyboardMarkup(keyboard)
+
+
+# Reply Keyboard (Menu di bawah chat)
+def get_reply_keyboard():
+    """Get reply keyboard menu (menu di bawah chat)"""
+    keyboard = [
+        [KeyboardButton("💰 Saldo"), KeyboardButton("📂 Tabungan")],
+        [KeyboardButton("📑 Pinjaman"), KeyboardButton("🎯 Target")],
+        [KeyboardButton("📋 List Tabungan"), KeyboardButton("📋 List Pinjaman")],
+        [KeyboardButton("📋 List Target"), KeyboardButton("🏠 Menu Utama")],
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
