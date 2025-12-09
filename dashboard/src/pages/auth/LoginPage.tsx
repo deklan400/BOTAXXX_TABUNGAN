@@ -33,11 +33,11 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login to BOTAXXX</h1>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="bg-slate-800 border border-slate-700 p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-white">Login to BOTAXXX</h1>
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
@@ -69,9 +69,9 @@ export const LoginPage: React.FC = () => {
             Login with Google
           </Button>
         </div>
-        <p className="mt-4 text-center text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-gray-400">
           Don't have an account?{' '}
-          <a href="/register" className="text-primary-600 hover:underline">
+          <a href="/register" className="text-primary-400 hover:underline">
             Register
           </a>
         </p>
