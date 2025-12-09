@@ -61,46 +61,63 @@ export const OverviewPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header */}
+      <div className="space-y-8 animate-fade-in">
+        {/* Header with modern design */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent drop-shadow-2xl">
               Financial Overview
             </h1>
-            <p className="text-gray-400">Track your financial health at a glance</p>
+            <p className="text-gray-400 text-lg">Track your financial health at a glance</p>
+          </div>
+          <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-300">Live</span>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid with stagger animation */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Balance"
-            value={overview.total_balance}
-            icon="💰"
-          />
-          <StatCard
-            title="Active Loans"
-            value={overview.total_active_loans_amount}
-            icon="📑"
-          />
-          <StatCard
-            title="Targets Progress"
-            value={overview.total_target_current_amount}
-            icon="🎯"
-          />
-          <StatCard
-            title="Monthly Income"
-            value={overview.total_income_month}
-            icon="📈"
-          />
+          <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+            <StatCard
+              title="Total Balance"
+              value={overview.total_balance}
+              icon="💰"
+            />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <StatCard
+              title="Active Loans"
+              value={overview.total_active_loans_amount}
+              icon="📑"
+            />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <StatCard
+              title="Targets Progress"
+              value={overview.total_target_current_amount}
+              icon="🎯"
+            />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <StatCard
+              title="Monthly Income"
+              value={overview.total_income_month}
+              icon="📈"
+            />
+          </div>
         </div>
 
-        {/* Charts Grid */}
+        {/* Charts Grid with modern cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {overview.daily_trend && overview.daily_trend.length > 0 && (
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-              <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-slate-700/50">Daily Trend</h2>
+            <div className="group bg-gradient-to-br from-slate-800/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-primary-500/20 hover:shadow-2xl hover:border-primary-500/50 transition-all duration-500 overflow-hidden">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/50">
+                <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Daily Trend
+                </h2>
+                <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"></div>
+              </div>
               <LineChart
                 data={overview.daily_trend}
                 xKey="date"
@@ -113,8 +130,13 @@ export const OverviewPage: React.FC = () => {
           )}
 
           {overview.monthly_summaries && overview.monthly_summaries.length > 0 && (
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-              <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-slate-700/50">Monthly Summary</h2>
+            <div className="group bg-gradient-to-br from-slate-800/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-primary-500/20 hover:shadow-2xl hover:border-primary-500/50 transition-all duration-500 overflow-hidden">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/50">
+                <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Monthly Summary
+                </h2>
+                <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"></div>
+              </div>
               <LineChart
                 data={overview.monthly_summaries.map((m: any) => ({
                   ...m,
