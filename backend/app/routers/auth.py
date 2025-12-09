@@ -85,20 +85,40 @@ async def google_login():
     try:
         auth_url = get_google_oauth_url()
         return RedirectResponse(url=auth_url)
+    except ValueError as e:
+        # Configuration error
+        app_logger.error(f"Google OAuth configuration error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google OAuth not configured: {str(e)}. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env file."
+        )
     except Exception as e:
         app_logger.error(f"Google OAuth error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google OAuth failed"
+            detail=f"Google OAuth failed: {str(e)}"
         )
 
 
 @router.get("/google/callback")
 async def google_callback(
-    code: str,
+    code: str = None,
+    error: str = None,
     db: Session = Depends(get_db)
 ):
     """Handle Google OAuth callback"""
+    if error:
+        app_logger.error(f"Google OAuth callback error: {error}")
+        from app.core.config import settings
+        frontend_url = f"{settings.FRONTEND_URL}/login?error=oauth_cancelled"
+        return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
+    
+    if not code:
+        app_logger.error("Google OAuth callback: No authorization code received")
+        from app.core.config import settings
+        frontend_url = f"{settings.FRONTEND_URL}/login?error=no_code"
+        return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
+    
     try:
         user_info = get_google_user_info_sync(code)
         user = get_or_create_google_user(
@@ -121,9 +141,13 @@ async def google_callback(
             url=f"{frontend_url}?token={access_token}",
             status_code=status.HTTP_302_FOUND
         )
+    except ValueError as e:
+        app_logger.error(f"Google OAuth configuration error: {str(e)}", exc_info=True)
+        from app.core.config import settings
+        frontend_url = f"{settings.FRONTEND_URL}/login?error=oauth_not_configured"
+        return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
     except Exception as e:
         app_logger.error(f"Google callback error: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google OAuth callback failed"
-        )
+        from app.core.config import settings
+        frontend_url = f"{settings.FRONTEND_URL}/login?error=oauth_failed"
+        return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)

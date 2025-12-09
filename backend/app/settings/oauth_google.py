@@ -7,17 +7,23 @@ from app.core.logging_config import app_logger
 def get_google_oauth_url() -> str:
     """Generate Google OAuth authorization URL"""
     if not settings.GOOGLE_CLIENT_ID:
-        raise ValueError("GOOGLE_CLIENT_ID not configured")
+        raise ValueError("GOOGLE_CLIENT_ID not configured. Please set GOOGLE_CLIENT_ID in .env file.")
+    
+    if not settings.GOOGLE_REDIRECT_URI:
+        raise ValueError("GOOGLE_REDIRECT_URI not configured. Please set GOOGLE_REDIRECT_URI in .env file.")
 
+    from urllib.parse import urlencode
+    
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "online",
+        "prompt": "select_account",
     }
 
-    query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+    query_string = urlencode(params)
     return f"https://accounts.google.com/o/oauth2/v2/auth?{query_string}"
 
 

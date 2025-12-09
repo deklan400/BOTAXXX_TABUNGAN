@@ -13,6 +13,23 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Check for OAuth errors in URL
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthError = urlParams.get('error');
+    if (oauthError) {
+      const errorMessages: Record<string, string> = {
+        'oauth_cancelled': 'Google login was cancelled',
+        'no_code': 'Google login failed: No authorization code received',
+        'oauth_not_configured': 'Google OAuth is not configured. Please contact administrator.',
+        'oauth_failed': 'Google login failed. Please try again or use email/password.',
+      };
+      setError(errorMessages[oauthError] || 'Google login failed');
+      // Clean URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
