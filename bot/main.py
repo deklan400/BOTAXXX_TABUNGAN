@@ -57,8 +57,19 @@ async def cancel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def menu_main_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle main menu"""
     query = update.callback_query
-    await query.answer()
-    await query.edit_message_text("Select an option:", reply_markup=get_main_menu_keyboard())
+    try:
+        await query.answer()
+        await query.edit_message_text("Select an option:", reply_markup=get_main_menu_keyboard())
+    except Exception as e:
+        # Handle "message not modified" error
+        if "not modified" in str(e).lower():
+            await query.answer()
+        else:
+            # If edit fails, try to send new message
+            try:
+                await query.message.reply_text("Select an option:", reply_markup=get_main_menu_keyboard())
+            except:
+                pass
 
 
 class FakeQuery:

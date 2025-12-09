@@ -12,8 +12,19 @@ async def tabungan_menu_callback(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     
     if query:
-        await query.answer()
-        await query.edit_message_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
+        try:
+            await query.answer()
+            await query.edit_message_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
+        except Exception as e:
+            # If message is not modified (same content), just answer the callback
+            if "not modified" in str(e).lower():
+                await query.answer()
+            else:
+                # If edit fails for other reason, try to send new message
+                try:
+                    await query.message.reply_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
+                except:
+                    pass
     elif update.message:
         await update.message.reply_text("📂 Tabungan Menu", reply_markup=get_tabungan_menu_keyboard())
 
@@ -50,15 +61,33 @@ async def tabungan_list_callback(update: Update, context: ContextTypes.DEFAULT_T
             text += f"{format_savings(s)}\n\n"
 
         if query:
-            await query.answer()
-            await query.edit_message_text(text, reply_markup=get_tabungan_menu_keyboard())
+            try:
+                await query.answer()
+                await query.edit_message_text(text, reply_markup=get_tabungan_menu_keyboard())
+            except Exception as edit_error:
+                if "not modified" in str(edit_error).lower():
+                    await query.answer()
+                else:
+                    try:
+                        await query.message.reply_text(text, reply_markup=get_tabungan_menu_keyboard())
+                    except:
+                        pass
         elif update.message:
             await update.message.reply_text(text, reply_markup=get_tabungan_menu_keyboard())
     except Exception as e:
         error_msg = f"❌ Error: {str(e)}"
         if query:
-            await query.answer()
-            await query.edit_message_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
+            try:
+                await query.answer()
+                await query.edit_message_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
+            except Exception as edit_error:
+                if "not modified" in str(edit_error).lower():
+                    await query.answer()
+                else:
+                    try:
+                        await query.message.reply_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
+                    except:
+                        pass
         elif update.message:
             await update.message.reply_text(error_msg, reply_markup=get_tabungan_menu_keyboard())
 

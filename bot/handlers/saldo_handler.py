@@ -27,14 +27,34 @@ async def saldo_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, is_
         text = format_overview(overview)
         
         if query:
-            await query.answer()
-            await query.edit_message_text(text, reply_markup=get_main_menu_keyboard())
+            try:
+                await query.answer()
+                await query.edit_message_text(text, reply_markup=get_main_menu_keyboard())
+            except Exception as edit_error:
+                # Handle "message not modified" error gracefully
+                if "not modified" in str(edit_error).lower():
+                    await query.answer()
+                else:
+                    # If edit fails, try to send new message
+                    try:
+                        await query.message.reply_text(text, reply_markup=get_main_menu_keyboard())
+                    except:
+                        pass
         elif update.message:
             await update.message.reply_text(text, reply_markup=get_main_menu_keyboard())
     except Exception as e:
         error_msg = f"❌ Error: {str(e)}"
         if query:
-            await query.answer()
-            await query.edit_message_text(error_msg, reply_markup=get_main_menu_keyboard())
+            try:
+                await query.answer()
+                await query.edit_message_text(error_msg, reply_markup=get_main_menu_keyboard())
+            except Exception as edit_error:
+                if "not modified" in str(edit_error).lower():
+                    await query.answer()
+                else:
+                    try:
+                        await query.message.reply_text(error_msg, reply_markup=get_main_menu_keyboard())
+                    except:
+                        pass
         elif update.message:
             await update.message.reply_text(error_msg, reply_markup=get_main_menu_keyboard())
