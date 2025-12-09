@@ -13,10 +13,11 @@ class User(Base):
     password_hash = Column(String, nullable=True)
     google_id = Column(String, unique=True, nullable=True, index=True)
     avatar_url = Column(String, nullable=True)
-    telegram_id = Column(String, unique=True, nullable=True, index=True)
+    telegram_id = Column(String, unique=True, nullable=True, index=True)  # Keep for backward compatibility
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
     savings = relationship("Savings", back_populates="user", cascade="all, delete-orphan")
     loans = relationship("Loan", back_populates="user", cascade="all, delete-orphan")
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
+    telegram_ids = relationship("UserTelegramID", back_populates="user", cascade="all, delete-orphan")

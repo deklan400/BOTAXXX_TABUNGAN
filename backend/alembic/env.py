@@ -26,6 +26,7 @@ from app.models.user import User
 from app.models.savings import Savings
 from app.models.loan import Loan, LoanPayment
 from app.models.target import Target
+from app.models.user_telegram import UserTelegramID
 
 target_metadata = Base.metadata
 

@@ -18,6 +18,13 @@ export interface UpdateTelegramIDRequest {
   telegram_id: string;
 }
 
+export interface TelegramID {
+  id: number;
+  telegram_id: string;
+  telegram_username?: string;
+  created_at: string;
+}
+
 export const userAPI = {
   getMe: async (): Promise<User> => {
     const response = await axiosClient.get('/users/me');
@@ -32,5 +39,19 @@ export const userAPI = {
   updateTelegramID: async (data: UpdateTelegramIDRequest) => {
     const response = await axiosClient.put('/users/me/telegram-id', data);
     return response.data;
+  },
+
+  getTelegramIDs: async (): Promise<TelegramID[]> => {
+    const response = await axiosClient.get('/users/me/telegram-ids');
+    return response.data;
+  },
+
+  addTelegramID: async (data: { telegram_id: string; telegram_username?: string }): Promise<TelegramID> => {
+    const response = await axiosClient.post('/users/me/telegram-ids', data);
+    return response.data;
+  },
+
+  deleteTelegramID: async (telegramIdId: number): Promise<void> => {
+    await axiosClient.delete(`/users/me/telegram-ids/${telegramIdId}`);
   },
 };

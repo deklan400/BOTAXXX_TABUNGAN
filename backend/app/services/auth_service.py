@@ -54,8 +54,20 @@ def login_user(db: Session, request: LoginRequest) -> dict:
 
 
 def telegram_login(db: Session, request: TelegramLoginRequest) -> dict:
-    """Login user via Telegram ID"""
-    user = db.query(User).filter(User.telegram_id == request.telegram_id).first()
+    """Login user via Telegram ID (supports multiple Telegram IDs)"""
+    from app.models.user_telegram import UserTelegramID
+    
+    # First check in user_telegram_ids table (new multi-ID system)
+    user_telegram = db.query(UserTelegramID).filter(
+        UserTelegramID.telegram_id == request.telegram_id
+    ).first()
+    
+    if user_telegram:
+        user = user_telegram.user
+    else:
+        # Fallback to old single telegram_id field (backward compatibility)
+        user = db.query(User).filter(User.telegram_id == request.telegram_id).first()
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
