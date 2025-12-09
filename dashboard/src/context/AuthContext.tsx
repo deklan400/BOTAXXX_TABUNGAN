@@ -32,7 +32,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      refreshUser().catch(() => {
+      refreshUser().catch((error) => {
+        // If token is invalid, clear it
+        console.error('Failed to refresh user:', error);
         localStorage.removeItem('token');
         setLoading(false);
       });
