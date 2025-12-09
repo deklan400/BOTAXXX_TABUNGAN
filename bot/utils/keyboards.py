@@ -64,4 +64,4 @@ def get_reply_keyboard():
         [KeyboardButton("📋 List Tabungan"), KeyboardButton("📋 List Pinjaman")],
         [KeyboardButton("📋 List Target"), KeyboardButton("🏠 Menu Utama")],
     ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)

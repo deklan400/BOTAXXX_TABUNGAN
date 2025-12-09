@@ -27,10 +27,14 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Tambahkan reply keyboard sebagai alternatif
-        await update.message.reply_text(
-            "Atau gunakan menu di bawah:",
-            reply_markup=get_reply_keyboard(),
-        )
+        try:
+            await update.message.reply_text(
+                "Atau gunakan menu di bawah:",
+                reply_markup=get_reply_keyboard(),
+            )
+        except Exception as kb_error:
+            # Jika reply keyboard error, skip saja (inline keyboard sudah cukup)
+            pass
     except Exception as e:
         await update.message.reply_text(
             f"❌ Authentication failed. Please register in the dashboard first and set your Telegram ID.\n\nError: {str(e)}"
