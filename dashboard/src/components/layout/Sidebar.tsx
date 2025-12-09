@@ -78,8 +78,18 @@ export const Sidebar: React.FC = () => {
       <div className="relative p-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-2xl flex items-center justify-center shadow-2xl shadow-primary-500/40 ring-2 ring-primary-500/20 transform group-hover:scale-110 transition-transform duration-300">
-              <span className="text-2xl font-black">B</span>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl ring-2 ring-primary-500/20 transform group-hover:scale-110 transition-transform duration-300 overflow-hidden bg-slate-800">
+              <img 
+                src="/logo.png" 
+                alt="BOTAXXX Logo" 
+                className="w-full h-full object-contain p-1"
+                onError={(e) => {
+                  // Fallback jika logo tidak ada
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = '<span class="text-2xl font-black text-white">B</span>';
+                }}
+              />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-800 animate-pulse"></div>
           </div>

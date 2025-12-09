@@ -44,8 +44,18 @@ export const RegisterPage: React.FC = () => {
       <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-3xl shadow-2xl shadow-primary-500/30 mb-4 ring-4 ring-primary-500/20">
-            <span className="text-4xl font-black text-white">B</span>
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl shadow-2xl shadow-primary-500/30 mb-4 ring-4 ring-primary-500/20 overflow-hidden bg-slate-800/50">
+            <img 
+              src="/logo.png" 
+              alt="BOTAXXX Logo" 
+              className="w-full h-full object-contain p-2"
+              onError={(e) => {
+                // Fallback jika logo tidak ada
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.parentElement!.innerHTML = '<span class="text-4xl font-black text-white">B</span>';
+              }}
+            />
           </div>
           <h1 className="text-4xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent">
             BOTAXXX
