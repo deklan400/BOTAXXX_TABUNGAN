@@ -11,12 +11,28 @@ interface LineChartProps {
 export const LineChart: React.FC<LineChartProps> = ({ data, xKey, lines }) => {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <RechartsLineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xKey} />
-        <YAxis />
-        <Tooltip />
-        <Legend />
+      <RechartsLineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+        <XAxis 
+          dataKey={xKey} 
+          stroke="#94a3b8"
+          style={{ fontSize: '12px' }}
+        />
+        <YAxis 
+          stroke="#94a3b8"
+          style={{ fontSize: '12px' }}
+        />
+        <Tooltip 
+          contentStyle={{
+            backgroundColor: '#1e293b',
+            border: '1px solid #334155',
+            borderRadius: '8px',
+            color: '#f1f5f9'
+          }}
+        />
+        <Legend 
+          wrapperStyle={{ color: '#cbd5e1', fontSize: '12px' }}
+        />
         {lines.map((line) => (
           <Line
             key={line.key}
@@ -24,7 +40,9 @@ export const LineChart: React.FC<LineChartProps> = ({ data, xKey, lines }) => {
             dataKey={line.key}
             name={line.name}
             stroke={line.color}
-            strokeWidth={2}
+            strokeWidth={3}
+            dot={{ fill: line.color, r: 4 }}
+            activeDot={{ r: 6 }}
           />
         ))}
       </RechartsLineChart>

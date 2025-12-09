@@ -61,9 +61,11 @@ export const Sidebar: React.FC = () => {
       className="bg-slate-800 text-white min-h-screen relative border-r border-slate-700"
       style={{ width: `${sidebarWidth}px` }}
     >
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">BOTAXXX</h1>
-        <p className="text-gray-400 text-sm mt-1">Financial Command Center</p>
+      <div className="p-6 border-b border-slate-700/50">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+          BOTAXXX
+        </h1>
+        <p className="text-gray-400 text-xs mt-1 font-medium">Financial Command Center</p>
       </div>
       <nav className="mt-8">
         {menuItems.map((item) => {
@@ -72,12 +74,14 @@ export const Sidebar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center px-6 py-3 hover:bg-slate-700 transition-colors ${
-                isActive ? 'bg-slate-700 border-l-4 border-primary-500' : ''
+              className={`flex items-center px-6 py-3 rounded-lg mx-2 transition-all duration-200 ${
+                isActive 
+                  ? 'bg-gradient-to-r from-primary-500/20 to-primary-500/10 border-l-4 border-primary-500 text-white shadow-lg' 
+                  : 'hover:bg-slate-700/50 text-gray-300 hover:text-white'
               }`}
             >
               <span className="mr-3 text-xl">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="font-medium">{item.label}</span>
             </Link>
           );
         })}
