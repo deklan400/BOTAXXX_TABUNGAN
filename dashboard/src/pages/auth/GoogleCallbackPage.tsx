@@ -20,9 +20,11 @@ export const GoogleCallbackPage: React.FC = () => {
   }, [searchParams, navigate, refreshUser]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950">
       <div className="text-center">
-        <p>Completing login...</p>
+        <div className="inline-block w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-xl font-semibold text-white mb-2">Completing login...</p>
+        <p className="text-sm text-gray-400">Please wait while we redirect you</p>
       </div>
     </div>
   );
