@@ -52,51 +52,100 @@ export const LoansPage: React.FC = () => {
     }
   };
 
+  const openEditModal = (loan: Loan) => {
+    setEditing(loan);
+    modal.open();
+  };
+
+  const openCreateModal = () => {
+    setEditing(null);
+    modal.open();
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Loans (Pinjaman)</h1>
-          <Button onClick={() => { setEditing(null); modal.open(); }}>Add Loan</Button>
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+              Loans (Pinjaman)
+            </h1>
+            <p className="text-gray-400">Track your loans and payments</p>
+          </div>
+          <Button onClick={openCreateModal}>+ Add Loan</Button>
         </div>
 
-        <Modal isOpen={modal.isOpen} onClose={() => { modal.close(); setEditing(null); }} title={editing ? 'Edit Loan' : 'Add Loan'}>
-          <LoanForm initialData={editing || undefined} onSubmit={editing ? handleUpdate : handleCreate} onCancel={() => { modal.close(); setEditing(null); }} isEdit={!!editing} />
+        <Modal 
+          isOpen={modal.isOpen} 
+          onClose={() => { modal.close(); setEditing(null); }} 
+          title={editing ? 'Edit Loan' : 'Add Loan'}
+        >
+          <LoanForm 
+            initialData={editing || undefined} 
+            onSubmit={editing ? handleUpdate : handleCreate} 
+            onCancel={() => { modal.close(); setEditing(null); }} 
+            isEdit={!!editing} 
+          />
         </Modal>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
+          <div className="bg-red-900/50 border border-red-700 text-red-200 px-6 py-4 rounded-xl">
+            <p className="font-semibold">Error</p>
+            <p className="text-sm mt-1">{error}</p>
           </div>
         )}
 
-        {loading ? <div className="text-center">Loading...</div> : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Borrower</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Principal</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remaining</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loans.map((loan) => (
-                  <tr key={loan.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{loan.borrower_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{formatRupiah(loan.principal)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{formatRupiah(loan.remaining_amount)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 py-1 text-xs rounded-full ${loan.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{loan.status}</span></td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => { setEditing(loan); modal.open(); }}>Edit</Button>
-                      <Button size="sm" variant="danger" onClick={() => handleDelete(loan.id)}>Delete</Button>
-                    </td>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+              <p className="text-gray-400">Loading loans...</p>
+            </div>
+          </div>
+        ) : loans.length === 0 ? (
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg p-12 text-center">
+            <div className="text-6xl mb-4">📑</div>
+            <h3 className="text-xl font-bold text-white mb-2">No loans yet</h3>
+            <p className="text-gray-400 mb-6">Start tracking your loans</p>
+            <Button onClick={openCreateModal}>Add Your First Loan</Button>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-700">
+                <thead className="bg-slate-800/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Borrower</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Principal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Remaining</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-slate-800/30 divide-y divide-slate-700">
+                  {loans.map((loan) => (
+                    <tr key={loan.id} className="hover:bg-slate-700/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{loan.borrower_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{formatRupiah(loan.principal)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-400">{formatRupiah(loan.remaining_amount)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                          loan.status === 'paid' 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                        }`}>
+                          {loan.status === 'paid' ? '✅ Paid' : '⏳ Active'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <Button size="sm" variant="outline" onClick={() => openEditModal(loan)}>Edit</Button>
+                        <Button size="sm" variant="danger" onClick={() => handleDelete(loan.id)}>Delete</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

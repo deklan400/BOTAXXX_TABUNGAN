@@ -50,7 +50,7 @@ export const SavingsForm: React.FC<SavingsFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
