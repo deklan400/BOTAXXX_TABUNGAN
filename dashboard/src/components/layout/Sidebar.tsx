@@ -2,15 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const menuItems = [
-  { path: '/', label: 'Overview', icon: '📊' },
-  { path: '/savings', label: 'Tabungan', icon: '💰' },
-  { path: '/loans', label: 'Pinjaman', icon: '📑' },
-  { path: '/targets', label: 'Target', icon: '🎯' },
-  { path: '/profile', label: 'Profile', icon: '👤' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
+  { path: '/', label: 'Overview', icon: '📊', color: 'from-blue-500 to-cyan-500' },
+  { path: '/savings', label: 'Tabungan', icon: '💰', color: 'from-green-500 to-emerald-500' },
+  { path: '/loans', label: 'Pinjaman', icon: '📑', color: 'from-yellow-500 to-orange-500' },
+  { path: '/targets', label: 'Target', icon: '🎯', color: 'from-purple-500 to-pink-500' },
+  { path: '/profile', label: 'Profile', icon: '👤', color: 'from-indigo-500 to-blue-500' },
+  { path: '/settings', label: 'Settings', icon: '⚙️', color: 'from-gray-500 to-slate-500' },
 ];
 
-const MIN_WIDTH = 200;
+const MIN_WIDTH = 240;
 const MAX_WIDTH = 400;
 
 export const Sidebar: React.FC = () => {
@@ -58,64 +58,112 @@ export const Sidebar: React.FC = () => {
   return (
     <div
       ref={sidebarRef}
-      className="bg-gradient-to-b from-slate-800/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl text-white min-h-screen relative border-r border-slate-700/50 shadow-2xl"
+      className="bg-gradient-to-b from-slate-800/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl text-white min-h-screen relative border-r border-slate-700/50 shadow-2xl overflow-hidden"
       style={{ width: `${sidebarWidth}px` }}
     >
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-purple-500/5"></div>
       
-      <div className="relative p-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <span className="text-xl font-bold">B</span>
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      
+      {/* Animated dots pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-10 w-2 h-2 bg-primary-400 rounded-full animate-pulse" style={{ animationDelay: '0s' }}></div>
+        <div className="absolute top-40 right-8 w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-40 left-8 w-1 h-1 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      {/* Header Section */}
+      <div className="relative p-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-2xl flex items-center justify-center shadow-2xl shadow-primary-500/40 ring-2 ring-primary-500/20 transform group-hover:scale-110 transition-transform duration-300">
+              <span className="text-2xl font-black">B</span>
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-800 animate-pulse"></div>
           </div>
-          <div>
-            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-black bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent leading-tight">
               BOTAXXX
             </h1>
-            <p className="text-gray-400 text-xs mt-0.5 font-medium">Financial Command Center</p>
+            <p className="text-gray-400 text-xs mt-0.5 font-semibold tracking-wide">Financial Command</p>
           </div>
         </div>
       </div>
       
-      <nav className="relative mt-6 px-2">
+      {/* Navigation Section */}
+      <nav className="relative mt-8 px-3 space-y-1">
         {menuItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`group flex items-center px-4 py-3 rounded-xl mx-2 mb-1 transition-all duration-300 relative overflow-hidden ${
+              className={`group flex items-center px-4 py-3.5 rounded-2xl mx-2 mb-2 transition-all duration-500 relative overflow-hidden ${
                 isActive 
-                  ? 'bg-gradient-to-r from-primary-500/30 via-primary-500/20 to-primary-500/10 border-l-4 border-primary-500 text-white shadow-lg shadow-primary-500/20 scale-[1.02]' 
-                  : 'hover:bg-slate-700/40 text-gray-300 hover:text-white hover:scale-[1.01]'
+                  ? `bg-gradient-to-r ${item.color} bg-opacity-20 text-white shadow-2xl shadow-primary-500/30 scale-[1.03] border-l-4 border-primary-400` 
+                  : 'hover:bg-slate-700/50 text-gray-300 hover:text-white hover:scale-[1.02] hover:shadow-lg'
               }`}
-              style={{ animationDelay: `${index * 50}ms` }}
+              style={{ animationDelay: `${index * 80}ms` }}
             >
               {/* Active indicator glow */}
               {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-transparent blur-xl"></div>
+                <>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-20 blur-2xl`}></div>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-400 to-primary-600 rounded-r-full"></div>
+                </>
               )}
               
-              <span className="relative mr-3 text-xl group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
-              <span className="relative font-semibold">{item.label}</span>
+              {/* Icon with gradient background */}
+              <div className={`relative mr-4 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                isActive 
+                  ? `bg-gradient-to-br ${item.color} shadow-lg` 
+                  : 'bg-slate-700/50 group-hover:bg-gradient-to-br group-hover:' + item.color
+              }`}>
+                <span className="text-xl relative z-10 group-hover:scale-125 transition-transform duration-300">{item.icon}</span>
+                {isActive && (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-50 blur-md`}></div>
+                )}
+              </div>
               
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span className="relative font-bold text-sm tracking-wide flex-1">{item.label}</span>
+              
+              {/* Active indicator arrow */}
+              {isActive && (
+                <div className="ml-2 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              )}
+              
+              {/* Hover shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              
+              {/* Ripple effect on click */}
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-active:opacity-20 group-active:bg-white group-active:animate-ping"></div>
             </Link>
           );
         })}
       </nav>
       
+      {/* Bottom Section */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-gradient-to-t from-slate-800/80 to-transparent">
+        <div className="px-4 py-3 bg-gradient-to-r from-slate-700/30 to-slate-700/10 rounded-xl border border-slate-600/30 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-400 font-medium">System Online</span>
+          </div>
+        </div>
+      </div>
+      
       {/* Resize Handle with better styling */}
       <div
-        className="absolute top-0 right-0 w-1.5 h-full bg-gradient-to-b from-slate-600 via-slate-600 to-slate-600 hover:from-primary-500 hover:via-primary-500 hover:to-primary-500 cursor-col-resize transition-all duration-300 group"
+        className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-slate-600/50 via-slate-600/30 to-slate-600/50 hover:from-primary-500/60 hover:via-primary-500/40 hover:to-primary-500/60 cursor-col-resize transition-all duration-300 group"
         onMouseDown={(e) => {
           e.preventDefault();
           setIsResizing(true);
         }}
       >
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-3 h-12 bg-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-4 h-16 bg-gradient-to-b from-slate-600 to-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg border-2 border-slate-500"></div>
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-1 h-8 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
     </div>
   );
