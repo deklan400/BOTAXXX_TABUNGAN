@@ -8,9 +8,9 @@ from app.core.config import settings
 from app.core.logging_config import app_logger, setup_logging
 from app.middlewares.rate_limit_middleware import RateLimitMiddleware
 
-# Import all models to ensure they are registered
+# Import base to ensure all models are registered
 from app.db.base import Base  # noqa: F401
-from app.models import User, Savings, Loan, LoanPayment, Target, UserTelegramID  # noqa: F401
+# Models are auto-imported via base.py
 
 # Setup logging
 setup_logging()
