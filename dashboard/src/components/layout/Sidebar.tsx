@@ -1,179 +1,319 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+
+// SVG Icons
+const BarChartIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const UsersIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+  </svg>
+);
+
+const TrendingUpIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>
+);
+
+const TrophyIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+  </svg>
+);
+
+const SettingsIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const LogoutIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
+);
+
+const ChevronRightIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const SearchIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+
+const CloseIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
 const menuItems = [
-  { path: '/', label: 'Overview', icon: '📊', color: 'from-blue-500 to-cyan-500' },
-  { path: '/savings', label: 'Tabungan', icon: '💰', color: 'from-green-500 to-emerald-500' },
-  { path: '/loans', label: 'Pinjaman', icon: '📑', color: 'from-yellow-500 to-orange-500' },
-  { path: '/targets', label: 'Target', icon: '🎯', color: 'from-purple-500 to-pink-500' },
-  { path: '/profile', label: 'Profile', icon: '👤', color: 'from-indigo-500 to-blue-500' },
-  { path: '/settings', label: 'Settings', icon: '⚙️', color: 'from-gray-500 to-slate-500' },
+  { path: '/', label: 'Statistics', icon: BarChartIcon },
+  { path: '/savings', label: 'Tabungan', icon: UsersIcon },
+  { path: '/loans', label: 'Pinjaman', icon: TrendingUpIcon },
+  { path: '/targets', label: 'Target', icon: TrophyIcon },
 ];
 
-const MIN_WIDTH = 240;
-const MAX_WIDTH = 400;
+const utilityItems = [
+  { path: '/settings', label: 'Settings', icon: SettingsIcon },
+  { path: '/logout', label: 'Log out', icon: LogoutIcon, isAction: true },
+];
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const saved = localStorage.getItem('sidebarWidth');
-    return saved ? parseInt(saved, 10) : 256; // Default 256px (w-64)
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === 'true';
   });
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved !== 'false'; // Default to dark mode
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('sidebarWidth', sidebarWidth.toString());
-  }, [sidebarWidth]);
+    localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+  }, [isCollapsed]);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      
-      const newWidth = e.clientX;
-      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
-        setSidebarWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
+    localStorage.setItem('darkMode', darkMode.toString());
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
+  }, [darkMode]);
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing]);
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleItemClick = (item: typeof utilityItems[0]) => {
+    if (item.isAction && item.path === '/logout') {
+      handleLogout();
+    } else {
+      navigate(item.path);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div
-      ref={sidebarRef}
-      className="bg-gradient-to-b from-slate-800/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl text-white min-h-screen relative border-r border-slate-700/50 shadow-2xl overflow-hidden"
-      style={{ width: `${sidebarWidth}px` }}
+      className={`bg-slate-800 text-white min-h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col ${
+        isCollapsed ? 'w-20' : 'w-64'
+      }`}
     >
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-purple-500/5"></div>
-      
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-      
-      {/* Animated dots pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-2 h-2 bg-primary-400 rounded-full animate-pulse" style={{ animationDelay: '0s' }}></div>
-        <div className="absolute top-40 right-8 w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-40 left-8 w-1 h-1 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
-      
-      {/* Header Section */}
-      <div className="relative p-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl ring-2 ring-primary-500/20 transform group-hover:scale-110 transition-transform duration-300 overflow-hidden bg-slate-800">
-              <img 
-                src="/logo.png" 
-                alt="BOTAXXX Logo" 
-                className="w-full h-full object-contain p-1"
-                onError={(e) => {
-                  // Fallback jika logo tidak ada
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.parentElement!.innerHTML = '<span class="text-2xl font-black text-white">B</span>';
-                }}
-              />
-            </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-800 animate-pulse"></div>
+      {/* Top Section - Logo and Toggle */}
+      <div className="p-4 border-b border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              className="w-full h-full object-contain p-1"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = '<span class="text-white font-bold text-lg">B</span>';
+                }
+              }}
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-black bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent leading-tight">
-              BOTAXXX
-            </h1>
-            <p className="text-gray-400 text-xs mt-0.5 font-semibold tracking-wide">Financial Command</p>
-          </div>
+          {!isCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto"
+            >
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
+          )}
+          {isCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors"
+            >
+              <ChevronRightIcon className="w-4 h-4 rotate-180" />
+            </button>
+          )}
         </div>
       </div>
-      
-      {/* Navigation Section */}
-      <nav className="relative mt-8 px-3 space-y-1">
-        {menuItems.map((item, index) => {
+
+      {/* Search Bar */}
+      <div className="p-4 border-b border-slate-700">
+        {isCollapsed ? (
+          <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+            <SearchIcon className="w-5 h-5 text-gray-400" />
+          </div>
+        ) : (
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Items */}
+      <nav className="py-4 flex-1 overflow-y-auto">
+        {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          
           return (
-            <Link
+            <div
               key={item.path}
-              to={item.path}
-              className={`group flex items-center px-4 py-3.5 rounded-2xl mx-2 mb-2 transition-all duration-500 relative overflow-hidden ${
-                isActive 
-                  ? `bg-gradient-to-r ${item.color} bg-opacity-20 text-white shadow-2xl shadow-primary-500/30 scale-[1.03] border-l-4 border-primary-400` 
-                  : 'hover:bg-slate-700/50 text-gray-300 hover:text-white hover:scale-[1.02] hover:shadow-lg'
-              }`}
-              style={{ animationDelay: `${index * 80}ms` }}
+              className="relative"
+              onMouseEnter={() => setHoveredItem(item.path)}
+              onMouseLeave={() => setHoveredItem(null)}
             >
-              {/* Active indicator glow */}
-              {isActive && (
-                <>
-                  <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-20 blur-2xl`}></div>
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-400 to-primary-600 rounded-r-full"></div>
-                </>
-              )}
-              
-              {/* Icon with gradient background */}
-              <div className={`relative mr-4 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                isActive 
-                  ? `bg-gradient-to-br ${item.color} shadow-lg` 
-                  : 'bg-slate-700/50 group-hover:bg-gradient-to-br group-hover:' + item.color
-              }`}>
-                <span className="text-xl relative z-10 group-hover:scale-125 transition-transform duration-300">{item.icon}</span>
-                {isActive && (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-50 blur-md`}></div>
+              <Link
+                to={item.path}
+                className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-slate-700 text-white'
+                    : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                }`}
+              >
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
+                {!isCollapsed && <span className="text-sm flex-1">{item.label}</span>}
+                {isActive && !isCollapsed && (
+                  <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
                 )}
-              </div>
+                {isActive && isCollapsed && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                )}
+              </Link>
               
-              <span className="relative font-bold text-sm tracking-wide flex-1">{item.label}</span>
-              
-              {/* Active indicator arrow */}
-              {isActive && (
-                <div className="ml-2 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && hoveredItem === item.path && (
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 z-50 pointer-events-none">
+                  <div className="bg-black text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap shadow-lg">
+                    {item.label}
+                  </div>
+                </div>
               )}
-              
-              {/* Hover shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              
-              {/* Ripple effect on click */}
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-active:opacity-20 group-active:bg-white group-active:animate-ping"></div>
-            </Link>
+            </div>
           );
         })}
       </nav>
-      
-      {/* Bottom Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-gradient-to-t from-slate-800/80 to-transparent">
-        <div className="px-4 py-3 bg-gradient-to-r from-slate-700/30 to-slate-700/10 rounded-xl border border-slate-600/30 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs text-gray-400 font-medium">System Online</span>
-          </div>
+
+      {/* Separator */}
+      <div className="border-t border-slate-700 my-2"></div>
+
+      {/* Utility Items */}
+      <nav className="py-2">
+        {utilityItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          
+          return (
+            <div
+              key={item.path}
+              className="relative"
+              onMouseEnter={() => setHoveredItem(item.path)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              {item.isAction ? (
+                <button
+                  onClick={() => handleItemClick(item)}
+                  className={`w-full flex items-center px-4 py-3 mx-2 rounded-lg transition-colors text-gray-300 hover:bg-slate-700/50 hover:text-white`}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
+                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                </button>
+              ) : (
+                <Link
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-slate-700 text-white'
+                      : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
+                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                </Link>
+              )}
+              
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && hoveredItem === item.path && (
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 z-50 pointer-events-none">
+                  <div className="bg-black text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap shadow-lg">
+                    {item.label}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Bottom Section - Dark Mode Toggle and User Profile */}
+      <div className="mt-auto p-4 border-t border-slate-700 bg-slate-800">
+        {/* Dark Mode Toggle */}
+        <div className={`flex items-center justify-between mb-4 ${isCollapsed ? 'justify-center' : ''}`}>
+          {!isCollapsed && <span className="text-sm text-gray-300">Dark mode</span>}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`relative w-12 h-6 rounded-full transition-colors ${
+              darkMode ? 'bg-blue-600' : 'bg-slate-600'
+            }`}
+          >
+            <div
+              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                darkMode ? 'transform translate-x-6' : ''
+              }`}
+            ></div>
+          </button>
         </div>
-      </div>
-      
-      {/* Resize Handle with better styling */}
-      <div
-        className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-slate-600/50 via-slate-600/30 to-slate-600/50 hover:from-primary-500/60 hover:via-primary-500/40 hover:to-primary-500/60 cursor-col-resize transition-all duration-300 group"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          setIsResizing(true);
-        }}
-      >
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-4 h-16 bg-gradient-to-b from-slate-600 to-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg border-2 border-slate-500"></div>
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-1 h-8 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+        {/* User Profile */}
+        <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+          <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+            {user ? (
+              <span className="text-white font-semibold text-sm">
+                {getInitials(user.name)}
+              </span>
+            ) : (
+              <span className="text-white font-semibold text-sm">A</span>
+            )}
+          </div>
+          {!isCollapsed && user && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{user.name}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
