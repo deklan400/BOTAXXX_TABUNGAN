@@ -77,29 +77,29 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Stats Grid with stagger animation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="animate-fade-in min-w-0" style={{ animationDelay: '0ms' }}>
             <StatCard
               title="Total Balance"
               value={overview.total_balance}
               icon="💰"
             />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <div className="animate-fade-in min-w-0" style={{ animationDelay: '100ms' }}>
             <StatCard
               title="Active Loans"
               value={overview.total_active_loans_amount}
               icon="📑"
             />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="animate-fade-in min-w-0" style={{ animationDelay: '200ms' }}>
             <StatCard
               title="Targets Progress"
               value={overview.total_target_current_amount}
               icon="🎯"
             />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <div className="animate-fade-in min-w-0" style={{ animationDelay: '300ms' }}>
             <StatCard
               title="Monthly Income"
               value={overview.total_income_month}
