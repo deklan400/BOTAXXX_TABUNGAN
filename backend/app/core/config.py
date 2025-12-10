@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     )
 
     # Rate Limiting
-    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_ENABLED: bool = False  # Disabled by default
     RATE_LIMIT_PER_MINUTE: int = 60
 
     # CORS

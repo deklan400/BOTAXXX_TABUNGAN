@@ -6,7 +6,6 @@ from typing import Annotated
 from app.schemas.auth import RegisterRequest, LoginRequest, TelegramLoginRequest, TokenResponse
 from app.services.auth_service import register_user, login_user, telegram_login, get_or_create_google_user
 from app.db.session import get_db
-from app.utils.rate_limit import rate_limit
 from app.settings.oauth_google import get_google_oauth_url, get_google_user_info_sync
 from app.core.logging_config import app_logger
 
@@ -14,7 +13,6 @@ router = APIRouter()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-@rate_limit(max_requests=3, window_seconds=60)
 async def register(
     request: Request,
     data: RegisterRequest,
@@ -36,7 +34,6 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
-@rate_limit(max_requests=5, window_seconds=60)
 async def login(
     request: Request,
     data: LoginRequest,
@@ -58,7 +55,6 @@ async def login(
 
 
 @router.post("/telegram-login", response_model=TokenResponse)
-@rate_limit(max_requests=10, window_seconds=60)
 async def telegram_login_endpoint(
     request: Request,
     data: TelegramLoginRequest,
