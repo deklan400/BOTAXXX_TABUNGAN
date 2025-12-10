@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -6,6 +6,7 @@ import { Select } from '../components/ui/Select';
 import { InfoCard } from '../components/cards/InfoCard';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI } from '../api/authAPI';
+import { userAPI, TelegramID } from '../api/userAPI';
 import axiosClient from '../api/axiosClient';
 
 export const SettingsPage: React.FC = () => {
@@ -28,9 +29,82 @@ export const SettingsPage: React.FC = () => {
   const [telegramNotifications, setTelegramNotifications] = useState(true);
   const [transactionAlerts, setTransactionAlerts] = useState(true);
 
+  // Telegram ID Management
+  const [telegramId, setTelegramId] = useState('');
+  const [telegramIds, setTelegramIds] = useState<TelegramID[]>([]);
+  const [newTelegramId, setNewTelegramId] = useState('');
+  const [newTelegramUsername, setNewTelegramUsername] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setTelegramId(user.telegram_id || '');
+      loadTelegramIDs();
+    }
+  }, [user]);
+
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
+  };
+
+  const loadTelegramIDs = async () => {
+    try {
+      const ids = await userAPI.getTelegramIDs();
+      setTelegramIds(ids);
+    } catch (error) {
+      console.error('Failed to load Telegram IDs:', error);
+    }
+  };
+
+  const handleUpdateTelegramId = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await userAPI.updateTelegramID({ telegram_id: telegramId });
+      showMessage('success', 'Telegram ID updated successfully');
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.detail || 'Failed to update Telegram ID');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddTelegramID = async () => {
+    if (!newTelegramId.trim()) {
+      showMessage('error', 'Telegram ID is required');
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      await userAPI.addTelegramID({
+        telegram_id: newTelegramId,
+        telegram_username: newTelegramUsername || undefined
+      });
+      setNewTelegramId('');
+      setNewTelegramUsername('');
+      await loadTelegramIDs();
+      showMessage('success', 'Telegram ID added successfully');
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.detail || 'Failed to add Telegram ID');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTelegramID = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this Telegram ID?')) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      await userAPI.deleteTelegramID(id);
+      await loadTelegramIDs();
+      showMessage('success', 'Telegram ID deleted successfully');
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.detail || 'Failed to delete Telegram ID');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -181,6 +255,89 @@ export const SettingsPage: React.FC = () => {
               {loading ? 'Changing...' : 'Change Password'}
             </Button>
           </form>
+        </InfoCard>
+
+        {/* Telegram ID Management */}
+        <InfoCard title="📱 Telegram ID Management">
+          <div className="space-y-6">
+            {/* Legacy Single Telegram ID */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Primary Telegram ID (Legacy)</h3>
+                <p className="text-sm text-gray-400 mb-4">Set your main Telegram ID for bot access</p>
+                <div className="space-y-3">
+                  <Input
+                    label="Telegram ID"
+                    value={telegramId}
+                    onChange={(e) => setTelegramId(e.target.value)}
+                    placeholder="Enter your Telegram user ID"
+                  />
+                  <Button onClick={handleUpdateTelegramId} disabled={loading || !telegramId.trim()}>
+                    {loading ? 'Updating...' : 'Update Telegram ID'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Multiple Telegram IDs */}
+            <div className="border-t border-slate-700 pt-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Multiple Telegram IDs</h3>
+              <p className="text-sm text-gray-400 mb-4">Add multiple Telegram IDs for shared accounts or family members</p>
+              
+              <div className="space-y-3">
+                <Input
+                  label="New Telegram ID"
+                  value={newTelegramId}
+                  onChange={(e) => setNewTelegramId(e.target.value)}
+                  placeholder="Enter Telegram user ID"
+                />
+                <Input
+                  label="Telegram Username (Optional)"
+                  value={newTelegramUsername}
+                  onChange={(e) => setNewTelegramUsername(e.target.value)}
+                  placeholder="@username"
+                />
+                <Button onClick={handleAddTelegramID} disabled={loading || !newTelegramId.trim()}>
+                  {loading ? 'Adding...' : '➕ Add Telegram ID'}
+                </Button>
+              </div>
+
+              {/* List of Telegram IDs */}
+              {telegramIds.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-white mb-3">Your Telegram IDs</h4>
+                  <div className="space-y-2">
+                    {telegramIds.map((tgId) => (
+                      <div key={tgId.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600/50">
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{tgId.telegram_id}</p>
+                          {tgId.telegram_username && (
+                            <p className="text-gray-400 text-sm">@{tgId.telegram_username}</p>
+                          )}
+                          <p className="text-gray-500 text-xs mt-1">
+                            Added: {new Date(tgId.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteTelegramID(tgId.id)}
+                          disabled={loading}
+                          className="ml-4 hover:bg-red-500/10 hover:border-red-500/50"
+                        >
+                          🗑️ Delete
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-sm text-gray-400 mt-4">
+                💡 Tip: Add multiple Telegram IDs to enable shared accounts. All added IDs can access your account via bot.
+              </p>
+            </div>
+          </div>
         </InfoCard>
 
         {/* Display Preferences */}
