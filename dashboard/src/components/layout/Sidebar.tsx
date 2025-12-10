@@ -176,14 +176,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
       {/* Sidebar */}
       <div
-        className={`bg-slate-800 text-white min-h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col z-50
+        className={`bg-slate-800 text-white h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col z-50
           ${isCollapsed ? 'w-20' : 'w-64'}
           ${isMobileOpen ? 'fixed inset-y-0 left-0' : 'hidden lg:flex'}
           ${isMobileOpen ? 'translate-x-0' : 'lg:translate-x-0'}
         `}
       >
       {/* Top Section - Logo and Toggle */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-slate-700 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <img 
@@ -231,7 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-slate-700 flex-shrink-0">
         {isCollapsed ? (
           <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
             <SearchIcon className="w-5 h-5 text-gray-400" />
@@ -250,8 +250,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
         )}
       </div>
 
-      {/* Navigation Items */}
-      <nav className="py-4 flex-1 overflow-y-auto">
+      {/* Navigation Items - Scrollable */}
+      <nav className="py-4 flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#475569 #1e293b' }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -296,10 +296,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </nav>
 
       {/* Separator */}
-      <div className="border-t border-slate-700 my-2"></div>
+      <div className="border-t border-slate-700 my-2 flex-shrink-0"></div>
 
       {/* Utility Items */}
-      <nav className="py-2">
+      <nav className="py-2 flex-shrink-0">
         {utilityItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -348,7 +348,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </nav>
 
       {/* Bottom Section - Dark Mode Toggle and User Profile */}
-      <div className="mt-auto p-4 border-t border-slate-700 bg-slate-800">
+      <div className="mt-auto p-4 border-t border-slate-700 bg-slate-800 flex-shrink-0">
         {/* Dark Mode Toggle */}
         <div className={`flex items-center justify-between mb-4 ${isCollapsed ? 'justify-center' : ''}`}>
           {!isCollapsed && <span className="text-sm text-gray-300">Dark mode</span>}
