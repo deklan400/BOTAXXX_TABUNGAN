@@ -28,6 +28,7 @@ class TargetUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     target_amount: Optional[float] = Field(default=None, gt=0, description="Target amount must be greater than 0")
     current_amount: Optional[float] = Field(default=None, ge=0, description="Current amount must be non-negative")
+    add_amount: Optional[float] = Field(default=None, ge=0, description="Amount to add to current amount (for incremental updates)")
     deadline: Optional[date] = None
     status: Optional[str] = None
     note: Optional[str] = None

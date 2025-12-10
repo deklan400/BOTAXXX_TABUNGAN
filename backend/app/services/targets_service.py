@@ -62,8 +62,15 @@ def update_target(
         target.name = request.name
     if request.target_amount is not None:
         target.target_amount = request.target_amount
-    if request.current_amount is not None:
+    
+    # Handle amount updates: add_amount takes priority for incremental updates
+    if request.add_amount is not None:
+        # Add to current amount (incremental update)
+        target.current_amount += request.add_amount
+    elif request.current_amount is not None:
+        # Set absolute value (direct update from dashboard)
         target.current_amount = request.current_amount
+    
     if request.deadline is not None:
         target.deadline = request.deadline
     if request.status is not None:

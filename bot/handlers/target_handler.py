@@ -133,7 +133,7 @@ async def target_update_callback(update: Update, context: ContextTypes.DEFAULT_T
         state_manager.set_waiting_for(user_id, "update_target_amount")
 
         await query.edit_message_text(
-            f"📊 Update Target\n\nTarget: {target['name']}\nCurrent: {target['current_amount']}\nEnter new current amount:",
+            f"📊 Update Target\n\nTarget: {target['name']}\nCurrent: Rp {target['current_amount']:,.0f}\nTarget: Rp {target['target_amount']:,.0f}\n\nEnter amount to add:",
             reply_markup=get_cancel_keyboard(),
         )
     except Exception as e:
@@ -180,16 +180,56 @@ async def handle_target_input(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     elif waiting_for == "update_target_amount":
         try:
-            new_amount = float(update.message.text)
+            add_amount = float(update.message.text)
+            if add_amount < 0:
+                await update.message.reply_text("❌ Amount cannot be negative. Please enter a positive number:")
+                return
+            
             target_id = state_manager.get_data(user_id, "update_target_id")
-
+            
+            # Get current target to show updated amount
+            targets = await api_client.list_targets(limit=10)
+            current_target = None
+            for t in targets:
+                if t["id"] == target_id:
+                    current_target = t
+                    break
+            
+            if not current_target:
+                await update.message.reply_text("❌ Target not found.")
+                return
+            
+            # Use add_amount to increment current amount
             await api_client.update_target(target_id, {
-                "current_amount": new_amount,
+                "add_amount": add_amount,
             })
 
+            # Get updated target to show new amount
+            updated_targets = await api_client.list_targets(limit=10)
+            updated_target = None
+            for t in updated_targets:
+                if t["id"] == target_id:
+                    updated_target = t
+                    break
+
             state_manager.clear_waiting_for(user_id)
+            
+            if updated_target:
+                progress = (updated_target['current_amount'] / updated_target['target_amount'] * 100) if updated_target['target_amount'] > 0 else 0
+                message = (
+                    f"✅ Target updated successfully!\n\n"
+                    f"Target: {updated_target['name']}\n"
+                    f"Added: Rp {add_amount:,.0f}\n"
+                    f"Previous: Rp {current_target['current_amount']:,.0f}\n"
+                    f"Current: Rp {updated_target['current_amount']:,.0f}\n"
+                    f"Target: Rp {updated_target['target_amount']:,.0f}\n"
+                    f"Progress: {progress:.1f}%"
+                )
+            else:
+                message = f"✅ Added Rp {add_amount:,.0f} to target successfully!"
+            
             await update.message.reply_text(
-                "✅ Target updated successfully!",
+                message,
                 reply_markup=get_target_menu_keyboard(),
             )
         except ValueError:

@@ -23,6 +23,7 @@ export interface TargetUpdateRequest {
   name?: string;
   target_amount?: number;
   current_amount?: number;
+  add_amount?: number; // Amount to add to current amount (for incremental updates)
   deadline?: string | null;
   status?: 'active' | 'done';
   note?: string | null;
