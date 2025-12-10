@@ -79,9 +79,10 @@ const utilityItems = [
 interface SidebarProps {
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
+  onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobileClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobileClose, onCollapseChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -105,7 +106,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
     }
-  }, [isCollapsed]);
+    // Notify parent about collapse state change
+    if (onCollapseChange) {
+      onCollapseChange(isCollapsed);
+    }
+  }, [isCollapsed, onCollapseChange]);
 
   // Reset collapse state on mobile
   useEffect(() => {
@@ -176,10 +181,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
       {/* Sidebar */}
       <div
-        className={`bg-slate-800 text-white h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col z-50
+        className={`bg-slate-800 text-white h-screen border-r border-slate-700 transition-all duration-300 flex flex-col z-50
           ${isCollapsed ? 'w-20' : 'w-64'}
-          ${isMobileOpen ? 'fixed inset-y-0 left-0' : 'hidden lg:flex'}
-          ${isMobileOpen ? 'translate-x-0' : 'lg:translate-x-0'}
+          ${isMobileOpen ? 'fixed inset-y-0 left-0' : 'hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex'}
         `}
       >
       {/* Top Section - Logo and Toggle */}

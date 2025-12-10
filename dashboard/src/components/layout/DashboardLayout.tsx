@@ -8,6 +8,13 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      return saved === 'true';
+    }
+    return false;
+  });
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">
@@ -18,8 +25,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       <Sidebar 
         isMobileOpen={isMobileSidebarOpen}
         onMobileClose={() => setIsMobileSidebarOpen(false)}
+        onCollapseChange={setIsSidebarCollapsed}
       />
-      <div className="flex-1 flex flex-col relative z-10 w-full lg:w-auto">
+      <div className={`flex-1 flex flex-col relative z-10 w-full transition-all duration-300 ${isMobileSidebarOpen ? '' : isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         <Navbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
         <main className="flex-1 p-4 md:p-6 lg:p-8 text-white overflow-auto">
           <div className="max-w-7xl mx-auto">
