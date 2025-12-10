@@ -58,6 +58,12 @@ const CloseIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const MenuIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
 const menuItems = [
   { path: '/', label: 'Statistics', icon: BarChartIcon },
   { path: '/savings', label: 'Tabungan', icon: UsersIcon },
@@ -70,11 +76,20 @@ const utilityItems = [
   { path: '/logout', label: 'Log out', icon: LogoutIcon, isAction: true },
 ];
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobileClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Don't collapse on mobile/tablet by default
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      return false;
+    }
     const saved = localStorage.getItem('sidebarCollapsed');
     return saved === 'true';
   });
@@ -86,7 +101,22 @@ export const Sidebar: React.FC = () => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+    // Only save collapse state on desktop
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+    }
+  }, [isCollapsed]);
+
+  // Reset collapse state on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024 && isCollapsed) {
+        setIsCollapsed(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
   useEffect(() => {
@@ -120,12 +150,38 @@ export const Sidebar: React.FC = () => {
       .slice(0, 2);
   };
 
+  // Close sidebar on mobile when clicking a link
+  const handleLinkClick = () => {
+    if (onMobileClose && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      onMobileClose();
+    }
+  };
+
+  // Don't allow collapse on mobile/tablet
+  const handleToggleCollapse = () => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsCollapsed(!isCollapsed);
+    }
+  };
+
   return (
-    <div
-      className={`bg-slate-800 text-white min-h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
-    >
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`bg-slate-800 text-white min-h-screen relative border-r border-slate-700 transition-all duration-300 flex flex-col z-50
+          ${isCollapsed ? 'w-20' : 'w-64'}
+          ${isMobileOpen ? 'fixed inset-y-0 left-0' : 'hidden lg:flex'}
+          ${isMobileOpen ? 'translate-x-0' : 'lg:translate-x-0'}
+        `}
+      >
       {/* Top Section - Logo and Toggle */}
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
@@ -145,17 +201,28 @@ export const Sidebar: React.FC = () => {
             />
           </div>
           {!isCollapsed && (
-            <button
-              onClick={() => setIsCollapsed(true)}
-              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto"
-            >
-              <ChevronRightIcon className="w-4 h-4" />
-            </button>
+            <>
+              <button
+                onClick={handleToggleCollapse}
+                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto hidden lg:flex"
+              >
+                <ChevronRightIcon className="w-4 h-4" />
+              </button>
+              {/* Mobile close button */}
+              {onMobileClose && (
+                <button
+                  onClick={onMobileClose}
+                  className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto lg:hidden"
+                >
+                  <CloseIcon className="w-4 h-4" />
+                </button>
+              )}
+            </>
           )}
           {isCollapsed && (
             <button
-              onClick={() => setIsCollapsed(false)}
-              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors"
+              onClick={handleToggleCollapse}
+              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors hidden lg:flex"
             >
               <ChevronRightIcon className="w-4 h-4 rotate-180" />
             </button>
@@ -198,6 +265,7 @@ export const Sidebar: React.FC = () => {
             >
               <Link
                 to={item.path}
+                onClick={handleLinkClick}
                 className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-slate-700 text-white'
@@ -254,6 +322,7 @@ export const Sidebar: React.FC = () => {
               ) : (
                 <Link
                   to={item.path}
+                  onClick={handleLinkClick}
                   className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-slate-700 text-white'
@@ -316,5 +385,6 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
