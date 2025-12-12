@@ -79,6 +79,11 @@ export const adminAPI = {
     return response.data;
   },
 
+  deleteUser: async (userId: number): Promise<{ message: string; deleted_user_id: number }> => {
+    const response = await axiosClient.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
+
   getMaintenanceMode: async (): Promise<MaintenanceModeResponse> => {
     const response = await axiosClient.get('/admin/maintenance');
     return response.data;

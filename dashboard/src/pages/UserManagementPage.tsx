@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { adminAPI, UserDetail } from '../api/adminAPI';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Modal } from '../components/ui/Modal';
 
 export const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<UserDetail[]>([]);
@@ -9,6 +10,9 @@ export const UserManagementPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(0);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserDetail | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const limit = 20;
 
   useEffect(() => {
@@ -36,6 +40,33 @@ export const UserManagementPage: React.FC = () => {
       console.error('Failed to suspend user:', error);
       alert('Gagal mengubah status user');
     }
+  };
+
+  const handleDeleteClick = (user: UserDetail) => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setDeleting(true);
+      await adminAPI.deleteUser(userToDelete.id);
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+      await loadUsers(); // Reload users
+    } catch (error: any) {
+      console.error('Failed to delete user:', error);
+      alert(error.response?.data?.detail || 'Gagal menghapus user');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -175,6 +206,13 @@ export const UserManagementPage: React.FC = () => {
                             Unsuspend
                           </Button>
                         )}
+                        <Button
+                          onClick={() => handleDeleteClick(user)}
+                          variant="danger"
+                          size="sm"
+                        >
+                          Hapus
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -211,6 +249,48 @@ export const UserManagementPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        title="Konfirmasi Hapus User"
+      >
+        <div className="p-6">
+          <p className="text-gray-300 mb-4">
+            Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait user ini.
+          </p>
+          {userToDelete && (
+            <div className="bg-slate-700/50 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                  {userToDelete.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-white font-medium">{userToDelete.name}</div>
+                  <div className="text-sm text-gray-400">{userToDelete.email}</div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex gap-3 justify-end">
+            <Button
+              onClick={handleDeleteCancel}
+              variant="secondary"
+              disabled={deleting}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              variant="danger"
+              disabled={deleting}
+            >
+              {deleting ? 'Menghapus...' : 'Hapus User'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

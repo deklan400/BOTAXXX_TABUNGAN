@@ -122,6 +122,36 @@ async def suspend_user(
     }
 
 
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    """Delete a user (permanent deletion - cascade to all related data)"""
+    if user_id == admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete yourself"
+        )
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Delete user (cascade will handle related data)
+    db.delete(user)
+    db.commit()
+    
+    return {
+        "message": "User deleted successfully",
+        "deleted_user_id": user_id
+    }
+
+
 @router.get("/maintenance", response_model=MaintenanceModeResponse)
 async def get_maintenance_mode(
     admin: User = Depends(get_current_admin)
