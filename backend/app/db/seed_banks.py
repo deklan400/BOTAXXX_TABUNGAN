@@ -1,7 +1,20 @@
 """
 Seeder untuk master data bank
 Jalankan script ini untuk populate database dengan data bank Indonesia dan bank luar
+
+Usage:
+    cd /var/www/botaxxx/backend
+    source venv/bin/activate
+    python -m app.db.seed_banks
+    atau
+    PYTHONPATH=/var/www/botaxxx/backend python app/db/seed_banks.py
 """
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from sqlalchemy.orm import Session
 from app.models.bank import Bank
 from app.db.session import SessionLocal
