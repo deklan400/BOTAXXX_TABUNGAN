@@ -49,11 +49,11 @@ export const BankCard: React.FC<BankCardProps> = ({
         {/* Header with Logo and Bank Name */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-xl bg-white/10 p-3 flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
+            <div className="w-28 h-28 rounded-xl bg-white/10 p-2 flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
               <img
                 src={getLogoPath(account.bank?.logo_filename || null)}
                 alt={account.bank?.name || 'Bank'}
-                className="w-full h-full object-contain"
+                className="w-24 h-24 object-contain"
                 onError={(e) => {
                   // Fallback jika logo tidak ada
                   const target = e.target as HTMLImageElement;
