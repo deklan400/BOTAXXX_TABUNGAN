@@ -6,6 +6,8 @@ export interface User {
   email: string;
   telegram_id: string | null;
   avatar_url: string | null;
+  role: string;
+  is_active: boolean;
   created_at: string;
 }
 

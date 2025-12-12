@@ -11,6 +11,7 @@ import { TargetsPage } from './pages/TargetsPage';
 import { BankAccountsPage } from './pages/BankAccountsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -20,6 +21,24 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }
 
   return user ? <>{children}</> : <Navigate to="/login" />;
+};
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (user.role !== 'admin') {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
 };
 
 function AppRoutes() {
@@ -82,6 +101,59 @@ function AppRoutes() {
           <PrivateRoute>
             <SettingsPage />
           </PrivateRoute>
+        }
+      />
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-white mb-4">User Management</h1>
+              <p className="text-gray-400">Coming soon...</p>
+            </div>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/maintenance"
+        element={
+          <AdminRoute>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-white mb-4">Maintenance Mode</h1>
+              <p className="text-gray-400">Coming soon...</p>
+            </div>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/broadcast"
+        element={
+          <AdminRoute>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-white mb-4">Broadcast Alert</h1>
+              <p className="text-gray-400">Coming soon...</p>
+            </div>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/banks"
+        element={
+          <AdminRoute>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-white mb-4">Bank Management</h1>
+              <p className="text-gray-400">Coming soon...</p>
+            </div>
+          </AdminRoute>
         }
       />
     </Routes>
