@@ -17,7 +17,7 @@ export const BankCard: React.FC<BankCardProps> = ({
   const [showAccountNumber, setShowAccountNumber] = useState(false);
 
   const maskAccountNumber = (accountNumber: string): string => {
-    if (accountNumber.length <= 4) return accountNumber;
+    if (!accountNumber || accountNumber.length <= 4) return accountNumber || '';
     const visibleStart = accountNumber.slice(0, 4);
     const visibleEnd = accountNumber.slice(-4);
     const masked = '*'.repeat(Math.max(0, accountNumber.length - 8));
@@ -34,8 +34,8 @@ export const BankCard: React.FC<BankCardProps> = ({
   };
 
   const displayAccountNumber = showAccountNumber
-    ? account.account_number
-    : maskAccountNumber(account.account_number);
+    ? (account.account_number || '')
+    : maskAccountNumber(account.account_number || '');
 
   return (
     <div
@@ -51,22 +51,22 @@ export const BankCard: React.FC<BankCardProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg bg-white/10 p-2 flex items-center justify-center backdrop-blur-sm border border-white/20">
               <img
-                src={getLogoPath(account.bank.logo_filename)}
-                alt={account.bank.name}
+                src={getLogoPath(account.bank?.logo_filename || null)}
+                alt={account.bank?.name || 'Bank'}
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   // Fallback jika logo tidak ada
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const parent = target.parentElement;
-                  if (parent) {
+                  if (parent && account.bank?.name) {
                     parent.innerHTML = `<span class="text-xl font-bold text-white">${account.bank.name.charAt(0)}</span>`;
                   }
                 }}
               />
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg">{account.bank.name}</h3>
+              <h3 className="text-white font-bold text-lg">{account.bank?.name || 'Bank'}</h3>
               {account.is_primary && (
                 <span className="text-xs text-primary-400 font-semibold">Rekening Utama</span>
               )}

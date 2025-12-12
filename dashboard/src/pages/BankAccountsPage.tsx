@@ -22,9 +22,10 @@ export const BankAccountsPage: React.FC = () => {
     try {
       setError(null);
       const data = await banksAPI.listAccounts();
-      setAccounts(data);
+      setAccounts(Array.isArray(data) ? data : []);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Gagal memuat rekening bank');
+      setAccounts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
