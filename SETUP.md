@@ -314,7 +314,7 @@ server {
     }
 
     # Direct backend access (for OAuth callbacks)
-    location ~ ^/(auth|users|overview|savings|loans|targets|health|docs) {
+    location ~ ^/(auth|users|overview|savings|loans|targets|banks|health|docs) {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
