@@ -30,7 +30,7 @@ export const BankCard: React.FC<BankCardProps> = ({
   };
 
   const getBrandColor = (): string => {
-    return account.bank.brand_color || '#0066CC';
+    return account.bank?.brand_color || '#0066CC';
   };
 
   const displayAccountNumber = showAccountNumber
