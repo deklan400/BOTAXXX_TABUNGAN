@@ -9,6 +9,8 @@ class UserBase(BaseModel):
     email: EmailStr
     telegram_id: Optional[str] = None
     avatar_url: Optional[str] = None
+    role: str = "user"
+    is_active: bool = True
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

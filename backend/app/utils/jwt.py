@@ -38,5 +38,24 @@ def get_current_user(
     user = db.query(User).filter(User.id == user_id_int).first()
     if user is None:
         raise credentials_exception
+    
+    # Check if user is active (for suspend/unsuspend feature)
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is suspended"
+        )
 
+    return user
+
+
+def get_current_admin(
+    user: User = Depends(get_current_user)
+) -> User:
+    """Get current user and verify admin role"""
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
     return user

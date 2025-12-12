@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
@@ -14,6 +14,8 @@ class User(Base):
     google_id = Column(String, unique=True, nullable=True, index=True)
     avatar_url = Column(String, nullable=True)
     telegram_id = Column(String, unique=True, nullable=True, index=True)  # Keep for backward compatibility
+    role = Column(String, default="user", nullable=False)  # "user" or "admin"
+    is_active = Column(Boolean, default=True, nullable=False)  # For suspend/unsuspend
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
