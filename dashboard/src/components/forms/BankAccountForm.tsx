@@ -35,16 +35,25 @@ export const BankAccountForm: React.FC<BankAccountFormProps> = ({
   const fetchBanks = async () => {
     try {
       setError('');
+      console.log('Fetching banks from API...'); // Debug log
       const data = await banksAPI.listBanks();
-      console.log('Banks loaded:', data); // Debug log
+      console.log('Banks API response:', data); // Debug log
+      console.log('Is array?', Array.isArray(data)); // Debug log
+      console.log('Length:', data?.length); // Debug log
+      
       if (Array.isArray(data) && data.length > 0) {
+        console.log(`Successfully loaded ${data.length} banks`); // Debug log
         setBanks(data);
+        setError(''); // Clear any previous errors
       } else {
+        console.warn('Banks array is empty or not an array'); // Debug log
         setError('Tidak ada bank tersedia. Pastikan database sudah di-seed.');
         setBanks([]);
       }
     } catch (err: any) {
       console.error('Error loading banks:', err); // Debug log
+      console.error('Error response:', err.response); // Debug log
+      console.error('Error data:', err.response?.data); // Debug log
       const errorMsg = err.response?.data?.detail || err.message || 'Gagal memuat daftar bank';
       setError(`Error: ${errorMsg}. Pastikan backend API berjalan dan database sudah di-seed.`);
       setBanks([]); // Set empty array on error

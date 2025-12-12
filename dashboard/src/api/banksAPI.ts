@@ -50,8 +50,12 @@ export const banksAPI = {
   // Bank Master Data
   listBanks: async (country?: string): Promise<Bank[]> => {
     const url = country ? `/banks/banks?country=${country}` : '/banks/banks';
+    console.log('Fetching banks from:', url); // Debug log
     const response = await axiosClient.get<BankListResponse>(url);
-    return response.data.banks;
+    console.log('Banks API response:', response.data); // Debug log
+    const banks = response.data?.banks || [];
+    console.log('Banks array:', banks); // Debug log
+    return banks;
   },
 
   getBank: async (id: number): Promise<Bank> => {
