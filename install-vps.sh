@@ -41,6 +41,7 @@ APP_USER="www-data"
 DB_NAME="botaxxx_db"
 DB_USER="botaxxx"
 REPO_URL="https://github.com/deklan400/BOTAXXX_TABUNGAN.git"
+BACKUP_DIR="/var/backups/botaxxx"
 
 # Get user inputs
 echo ""
@@ -50,6 +51,17 @@ read -p "Enter your domain name (e.g., example.com) or press Enter to use IP: " 
 read -p "Enter API subdomain (e.g., api.example.com) or press Enter to use same domain: " API_DOMAIN
 read -p "Enter email for SSL certificate (optional, press Enter to skip SSL): " SSL_EMAIL
 read -p "Enter Telegram Bot Token from @BotFather (optional, can add later): " TELEGRAM_TOKEN
+
+# Ask about backup/restore
+echo ""
+print_info "=== Backup & Restore Options ==="
+read -p "Do you want to backup existing data before installation? (y/n, default: y): " BACKUP_EXISTING
+BACKUP_EXISTING=${BACKUP_EXISTING:-y}
+read -p "Do you want to restore from backup? (y/n, default: n): " RESTORE_BACKUP
+RESTORE_BACKUP=${RESTORE_BACKUP:-n}
+if [ "$RESTORE_BACKUP" = "y" ]; then
+    read -p "Enter backup file path (e.g., /path/to/backup.tar.gz): " BACKUP_FILE
+fi
 
 if [ -z "$DOMAIN" ]; then
     # Try to get IPv4 address first, fallback to IPv6
@@ -75,8 +87,49 @@ print_info "Starting installation for domain: $DOMAIN"
 print_info "API domain: $API_DOMAIN"
 echo ""
 
+# Step 0: Create backup directory and handle backup/restore
+print_info "Step 0: Setting up backup directory..."
+mkdir -p $BACKUP_DIR
+chown $APP_USER:$APP_USER $BACKUP_DIR 2>/dev/null || true
+
+# Backup existing data if requested
+if [ "$BACKUP_EXISTING" = "y" ] && [ -d "$APP_DIR" ]; then
+    print_info "Backing up existing data..."
+    BACKUP_FILE_NAME="botaxxx_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+    BACKUP_PATH="$BACKUP_DIR/$BACKUP_FILE_NAME"
+    
+    # Backup database if exists
+    if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw $DB_NAME; then
+        print_info "Backing up database..."
+        sudo -u postgres pg_dump $DB_NAME > $BACKUP_DIR/db_backup_$(date +%Y%m%d_%H%M%S).sql
+        print_success "Database backup created"
+    fi
+    
+    # Backup important files
+    print_info "Backing up important files..."
+    tar -czf $BACKUP_PATH \
+        $APP_DIR/backend/.env \
+        $APP_DIR/bot/.env \
+        $APP_DIR/dashboard/.env \
+        $APP_DIR/dashboard/public/banks/ \
+        $APP_DIR/deployment_info.txt \
+        2>/dev/null || print_warning "Some files may not exist for backup"
+    
+    print_success "Backup created: $BACKUP_PATH"
+fi
+
+# Restore from backup if requested
+if [ "$RESTORE_BACKUP" = "y" ] && [ ! -z "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
+    print_info "Restoring from backup: $BACKUP_FILE"
+    RESTORE_DIR="/tmp/botaxxx_restore_$$"
+    mkdir -p $RESTORE_DIR
+    tar -xzf $BACKUP_FILE -C $RESTORE_DIR
+    print_success "Backup extracted to $RESTORE_DIR"
+    print_info "You can restore files manually after installation"
+fi
+
 # Step 1: Update system
-print_info "Step 1/13: Updating system..."
+print_info "Step 1/14: Updating system..."
 apt update
 apt upgrade -y
 apt install -y curl wget git build-essential software-properties-common ufw
@@ -308,6 +361,32 @@ else
     exit 1
 fi
 
+# Seed bank data if not exists
+print_info "Seeding bank data..."
+if python3.11 -c "
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from dotenv import load_dotenv
+load_dotenv()
+from app.db.session import SessionLocal
+from app.models.bank import Bank
+db = SessionLocal()
+bank_count = db.query(Bank).count()
+db.close()
+exit(0 if bank_count > 0 else 1)
+" 2>/dev/null; then
+    print_info "Bank data already exists, skipping seed"
+else
+    print_info "Seeding bank data..."
+    if python3.11 app/db/seed_banks.py 2>/dev/null; then
+        print_success "Bank data seeded successfully"
+    else
+        print_warning "Bank data seeding failed, but continuing..."
+        print_info "You can seed manually later: cd $APP_DIR/backend && source venv/bin/activate && python app/db/seed_banks.py"
+    fi
+fi
+
 # Step 11: Setup Frontend
 print_info "Step 11/13: Setting up frontend..."
 cd $APP_DIR/dashboard
@@ -369,8 +448,55 @@ EOF
 
 chown $APP_USER:$APP_USER .env
 
-# Step 13: Create systemd services
-print_info "Step 13/13: Creating systemd services..."
+# Step 13: Restore important files from backup if available
+if [ "$RESTORE_BACKUP" = "y" ] && [ ! -z "$RESTORE_DIR" ] && [ -d "$RESTORE_DIR" ]; then
+    print_info "Step 13/15: Restoring files from backup..."
+    
+    # Restore .env files if they exist in backup
+    if [ -f "$RESTORE_DIR$APP_DIR/backend/.env" ]; then
+        print_info "Restoring backend .env..."
+        cp $RESTORE_DIR$APP_DIR/backend/.env $APP_DIR/backend/.env.backup
+        # Merge with new DATABASE_URL if needed
+        if grep -q "DATABASE_URL=" $APP_DIR/backend/.env.backup; then
+            # Keep old DATABASE_URL if restoring
+            OLD_DB_URL=$(grep "DATABASE_URL=" $RESTORE_DIR$APP_DIR/backend/.env)
+            sed -i "s|DATABASE_URL=.*|$OLD_DB_URL|" $APP_DIR/backend/.env 2>/dev/null || true
+        fi
+    fi
+    
+    if [ -f "$RESTORE_DIR$APP_DIR/bot/.env" ]; then
+        print_info "Restoring bot .env..."
+        cp $RESTORE_DIR$APP_DIR/bot/.env $APP_DIR/bot/.env
+    fi
+    
+    if [ -f "$RESTORE_DIR$APP_DIR/dashboard/.env" ]; then
+        print_info "Restoring dashboard .env..."
+        cp $RESTORE_DIR$APP_DIR/dashboard/.env $APP_DIR/dashboard/.env
+    fi
+    
+    # Restore bank logos
+    if [ -d "$RESTORE_DIR$APP_DIR/dashboard/public/banks" ]; then
+        print_info "Restoring bank logos..."
+        mkdir -p $APP_DIR/dashboard/public/banks
+        cp -r $RESTORE_DIR$APP_DIR/dashboard/public/banks/* $APP_DIR/dashboard/public/banks/ 2>/dev/null || true
+    fi
+    
+    # Restore database if backup exists
+    DB_BACKUP=$(ls -t $BACKUP_DIR/db_backup_*.sql 2>/dev/null | head -1)
+    if [ ! -z "$DB_BACKUP" ] && [ -f "$DB_BACKUP" ]; then
+        print_info "Restoring database from backup..."
+        read -p "Do you want to restore database? This will overwrite existing data! (y/n): " RESTORE_DB
+        if [ "$RESTORE_DB" = "y" ]; then
+            sudo -u postgres psql $DB_NAME < $DB_BACKUP && print_success "Database restored" || print_warning "Database restore failed"
+        fi
+    fi
+    
+    chown -R $APP_USER:$APP_USER $APP_DIR
+    print_success "Files restored from backup"
+fi
+
+# Step 14: Create systemd services
+print_info "Step 14/15: Creating systemd services..."
 
 # Create log directory
 mkdir -p /var/log/botaxxx
@@ -506,8 +632,8 @@ else
     print_info "Or restart both: sudo systemctl restart botaxxx-backend && sleep 5 && sudo systemctl restart botaxxx-bot"
 fi
 
-# Step 14: Setup Nginx
-print_info "Setting up Nginx..."
+# Step 15: Setup Nginx
+print_info "Step 15/15: Setting up Nginx..."
 
 # Create Nginx config
 # Check if domain is IPv6
@@ -582,8 +708,15 @@ server {
         rewrite ^/api/(.*) /\$1 break;
     }
 
-    # Backend API direct routes (docs, health, etc)
-    location ~ ^/(docs|openapi.json|health|auth|users|overview|savings|loans|targets|banks) {
+    # Serve static bank logos (must be before API routes)
+    location ~ ^/banks/.*\.(png|jpg|jpeg|svg|gif|webp)$ {
+        root $APP_DIR/dashboard/dist;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Backend API direct routes (docs, health, etc) - include admin and maintenance
+    location ~ ^/(docs|openapi.json|health|auth|users|overview|savings|loans|targets|banks/banks|banks/accounts|admin|maintenance) {
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -678,7 +811,41 @@ print_info "Setting permissions..."
 chown -R $APP_USER:$APP_USER $APP_DIR
 chmod -R 755 $APP_DIR
 
-# Step 17: Save credentials
+# Step 17: Create backup script
+print_info "Creating backup script..."
+cat > /usr/local/bin/botaxxx-backup << 'BACKUP_SCRIPT'
+#!/bin/bash
+# BOTAXXX Backup Script
+BACKUP_DIR="/var/backups/botaxxx"
+APP_DIR="/var/www/botaxxx"
+DB_NAME="botaxxx_db"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+echo "Creating backup..."
+# Backup database
+sudo -u postgres pg_dump $DB_NAME > $BACKUP_DIR/db_backup_$TIMESTAMP.sql
+
+# Backup files
+tar -czf $BACKUP_DIR/files_backup_$TIMESTAMP.tar.gz \
+    $APP_DIR/backend/.env \
+    $APP_DIR/bot/.env \
+    $APP_DIR/dashboard/.env \
+    $APP_DIR/dashboard/public/banks/ \
+    $APP_DIR/deployment_info.txt \
+    2>/dev/null
+
+echo "Backup created:"
+echo "  Database: $BACKUP_DIR/db_backup_$TIMESTAMP.sql"
+echo "  Files: $BACKUP_DIR/files_backup_$TIMESTAMP.tar.gz"
+BACKUP_SCRIPT
+
+chmod +x /usr/local/bin/botaxxx-backup
+print_success "Backup script created: /usr/local/bin/botaxxx-backup"
+print_info "Run 'sudo botaxxx-backup' to create manual backup"
+
+# Step 18: Save credentials
 print_info "Saving deployment information..."
 cat > $APP_DIR/deployment_info.txt << EOF
 BOTAXXX Deployment Information
@@ -695,11 +862,17 @@ Database:
 Backend:
   SECRET_KEY: $SECRET_KEY
 
+Backup:
+  Backup directory: $BACKUP_DIR
+  Create backup: sudo botaxxx-backup
+  Latest backup: ls -lt $BACKUP_DIR | head -5
+
 Important:
 1. Edit $APP_DIR/bot/.env and add your TELEGRAM_BOT_TOKEN if not set
 2. Restart bot service: systemctl restart botaxxx-bot
 3. Check service status: systemctl status botaxxx-backend botaxxx-bot
 4. View logs: journalctl -u botaxxx-backend -f
+5. Create backup before major changes: sudo botaxxx-backup
 
 Access URLs:
 - Frontend: http://$DOMAIN (or https:// if SSL configured)
