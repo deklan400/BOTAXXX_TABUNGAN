@@ -13,6 +13,9 @@ class Bank(Base):
     code = Column(String, nullable=False, unique=True, index=True)  # "bca", "mandiri" - untuk logo filename
     logo_filename = Column(String, nullable=True)  # "bca.png"
     brand_color = Column(String, nullable=True)  # "#0066CC" - untuk kartu
+    logo_background = Column(String, nullable=True)  # "#FFFFFF" - warna latar belakang logo
+    logo_size_width = Column(Integer, nullable=True)  # Lebar logo dalam px
+    logo_size_height = Column(Integer, nullable=True)  # Tinggi logo dalam px
     country = Column(String, default="ID", nullable=False)  # "ID", "KH", "SG", etc
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

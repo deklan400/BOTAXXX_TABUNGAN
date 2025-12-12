@@ -46,14 +46,29 @@ export interface Bank {
   code: string;
   logo_filename: string | null;
   brand_color: string | null;
+  logo_background: string | null;
+  logo_size_width: number | null;
+  logo_size_height: number | null;
   country: string;
   is_active: boolean;
 }
 
+export interface BankCreateRequest {
+  name: string;
+  code: string;
+  country?: string;
+  brand_color?: string;
+  logo_background?: string;
+  logo_size_width?: number;
+  logo_size_height?: number;
+}
+
 export interface BankLogoUpdateRequest {
   brand_color?: string;
+  logo_background?: string;
+  logo_size_width?: number;
+  logo_size_height?: number;
   is_active?: boolean;
-  logo_size?: { width?: number; height?: number };
 }
 
 export const adminAPI = {
@@ -117,6 +132,16 @@ export const adminAPI = {
 
   updateBankSettings: async (bankId: number, request: BankLogoUpdateRequest): Promise<{ message: string; bank: Bank }> => {
     const response = await axiosClient.put(`/admin/banks/${bankId}`, request);
+    return response.data;
+  },
+
+  createBank: async (request: BankCreateRequest): Promise<{ message: string; bank: Bank }> => {
+    const response = await axiosClient.post('/admin/banks', request);
+    return response.data;
+  },
+
+  deleteBank: async (bankId: number): Promise<{ message: string; deleted_bank_id: number }> => {
+    const response = await axiosClient.delete(`/admin/banks/${bankId}`);
     return response.data;
   },
 };

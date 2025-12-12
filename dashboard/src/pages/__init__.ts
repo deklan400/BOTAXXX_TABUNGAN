@@ -10,6 +10,8 @@ export * from './AdminDashboardPage';
 export * from './MaintenanceModePage';
 export * from './MaintenancePage';
 export * from './BroadcastAlertPage';
+export * from './BankManagementPage';
+export * from './BankDetailPage';
 export * from './UserManagementPage';
 export * from './ProfilePage';
 export * from './SettingsPage';

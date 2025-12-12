@@ -10,6 +10,9 @@ class BankBase(BaseModel):
     code: str
     logo_filename: Optional[str] = None
     brand_color: Optional[str] = None
+    logo_background: Optional[str] = None
+    logo_size_width: Optional[int] = None
+    logo_size_height: Optional[int] = None
     country: str
     is_active: bool
 

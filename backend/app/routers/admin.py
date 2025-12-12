@@ -19,6 +19,7 @@ from app.schemas.admin import (
     MaintenanceModeResponse,
     BroadcastAlertRequest,
     BankLogoUpdateRequest,
+    BankCreateRequest,
     AdminStatsResponse
 )
 from app.core.config import settings
@@ -277,6 +278,44 @@ async def update_bank_logo(
     }
 
 
+@router.post("/banks", status_code=status.HTTP_201_CREATED)
+async def create_bank(
+    request: BankCreateRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    """Create a new bank"""
+    # Check if bank with same name or code already exists
+    existing_bank = db.query(Bank).filter(
+        (Bank.name == request.name) | (Bank.code == request.code)
+    ).first()
+    if existing_bank:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bank with this name or code already exists"
+        )
+    
+    bank = Bank(
+        name=request.name,
+        code=request.code,
+        country=request.country,
+        brand_color=request.brand_color,
+        logo_background=request.logo_background,
+        logo_size_width=request.logo_size_width,
+        logo_size_height=request.logo_size_height,
+        is_active=True
+    )
+    
+    db.add(bank)
+    db.commit()
+    db.refresh(bank)
+    
+    return {
+        "message": "Bank created successfully",
+        "bank": bank
+    }
+
+
 @router.put("/banks/{bank_id}")
 async def update_bank_settings(
     bank_id: int,
@@ -284,7 +323,7 @@ async def update_bank_settings(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ):
-    """Update bank settings (logo size, brand color, etc)"""
+    """Update bank settings (logo size, brand color, background, etc)"""
     bank = db.query(Bank).filter(Bank.id == bank_id).first()
     if not bank:
         raise HTTPException(
@@ -292,8 +331,14 @@ async def update_bank_settings(
             detail="Bank not found"
         )
     
-    if request.brand_color:
+    if request.brand_color is not None:
         bank.brand_color = request.brand_color
+    if request.logo_background is not None:
+        bank.logo_background = request.logo_background
+    if request.logo_size_width is not None:
+        bank.logo_size_width = request.logo_size_width
+    if request.logo_size_height is not None:
+        bank.logo_size_height = request.logo_size_height
     if request.is_active is not None:
         bank.is_active = request.is_active
     
@@ -303,5 +348,45 @@ async def update_bank_settings(
     return {
         "message": "Bank settings updated successfully",
         "bank": bank
+    }
+
+
+@router.delete("/banks/{bank_id}")
+async def delete_bank(
+    bank_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    """Delete a bank (will cascade delete all bank accounts)"""
+    bank = db.query(Bank).filter(Bank.id == bank_id).first()
+    if not bank:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bank not found"
+        )
+    
+    # Check if bank has accounts
+    account_count = len(bank.bank_accounts)
+    if account_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete bank. There are {account_count} bank account(s) associated with this bank. Please delete or reassign them first."
+        )
+    
+    # Delete logo file if exists
+    if bank.logo_filename:
+        import pathlib
+        project_root = pathlib.Path(__file__).parent.parent.parent.parent
+        logo_dir = project_root / "dashboard" / "public" / "banks"
+        logo_path = logo_dir / bank.logo_filename
+        if logo_path.exists():
+            os.remove(logo_path)
+    
+    db.delete(bank)
+    db.commit()
+    
+    return {
+        "message": "Bank deleted successfully",
+        "deleted_bank_id": bank_id
     }
 

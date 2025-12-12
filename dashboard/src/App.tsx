@@ -16,6 +16,8 @@ import { UserManagementPage } from './pages/UserManagementPage';
 import { MaintenanceModePage } from './pages/MaintenanceModePage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { BroadcastAlertPage } from './pages/BroadcastAlertPage';
+import { BankManagementPage } from './pages/BankManagementPage';
+import { BankDetailPage } from './pages/BankDetailPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { maintenanceAPI } from './api/maintenanceAPI';
 
@@ -195,10 +197,17 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <DashboardLayout>
-              <div className="p-6">
-                <h1 className="text-3xl font-bold text-white mb-4">Bank Management</h1>
-                <p className="text-gray-400">Coming soon...</p>
-              </div>
+              <BankManagementPage />
+            </DashboardLayout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/banks/:id"
+        element={
+          <AdminRoute>
+            <DashboardLayout>
+              <BankDetailPage />
             </DashboardLayout>
           </AdminRoute>
         }

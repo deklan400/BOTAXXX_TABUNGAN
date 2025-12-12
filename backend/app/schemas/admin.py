@@ -40,8 +40,20 @@ class BroadcastAlertRequest(BaseModel):
 
 class BankLogoUpdateRequest(BaseModel):
     brand_color: Optional[str] = Field(None, description="Bank brand color (hex)")
+    logo_background: Optional[str] = Field(None, description="Logo background color (hex)")
+    logo_size_width: Optional[int] = Field(None, description="Logo width in pixels")
+    logo_size_height: Optional[int] = Field(None, description="Logo height in pixels")
     is_active: Optional[bool] = Field(None, description="Bank active status")
-    logo_size: Optional[dict] = Field(None, description="Logo size settings (width, height)")
+
+
+class BankCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100, description="Bank name")
+    code: str = Field(..., min_length=1, max_length=50, description="Bank code (for logo filename)")
+    country: str = Field(default="ID", description="Country code")
+    brand_color: Optional[str] = Field(None, description="Bank brand color (hex)")
+    logo_background: Optional[str] = Field(None, description="Logo background color (hex)")
+    logo_size_width: Optional[int] = Field(None, description="Logo width in pixels")
+    logo_size_height: Optional[int] = Field(None, description="Logo height in pixels")
 
 
 class AdminStatsResponse(BaseModel):
