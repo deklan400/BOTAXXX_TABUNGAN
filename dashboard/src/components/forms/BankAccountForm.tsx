@@ -34,10 +34,19 @@ export const BankAccountForm: React.FC<BankAccountFormProps> = ({
 
   const fetchBanks = async () => {
     try {
+      setError('');
       const data = await banksAPI.listBanks();
-      setBanks(Array.isArray(data) ? data : []);
+      console.log('Banks loaded:', data); // Debug log
+      if (Array.isArray(data) && data.length > 0) {
+        setBanks(data);
+      } else {
+        setError('Tidak ada bank tersedia. Pastikan database sudah di-seed.');
+        setBanks([]);
+      }
     } catch (err: any) {
-      setError('Failed to load banks');
+      console.error('Error loading banks:', err); // Debug log
+      const errorMsg = err.response?.data?.detail || err.message || 'Gagal memuat daftar bank';
+      setError(`Error: ${errorMsg}. Pastikan backend API berjalan dan database sudah di-seed.`);
       setBanks([]); // Set empty array on error
     } finally {
       setLoadingBanks(false);
@@ -73,16 +82,29 @@ export const BankAccountForm: React.FC<BankAccountFormProps> = ({
       )}
 
       {loadingBanks ? (
-        <div className="text-gray-400">Loading banks...</div>
+        <div className="text-gray-400">Memuat daftar bank...</div>
+      ) : banks.length === 0 ? (
+        <div className="bg-yellow-900/50 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg">
+          <p className="font-semibold mb-1">Tidak ada bank tersedia</p>
+          <p className="text-sm">Pastikan:</p>
+          <ul className="text-sm list-disc list-inside mt-1">
+            <li>Backend API berjalan dengan baik</li>
+            <li>Database sudah di-seed dengan data bank</li>
+            <li>Jalankan: <code className="bg-slate-800 px-1 rounded">python -m app.db.seed_banks</code></li>
+          </ul>
+        </div>
       ) : (
         <Select
           label="Bank"
           value={formData.bank_id}
           onChange={(e) => setFormData({ ...formData, bank_id: e.target.value })}
-          options={Array.isArray(banks) ? banks.map((bank) => ({
-            value: bank.id.toString(),
-            label: bank.name,
-          })) : []}
+          options={[
+            { value: '', label: '-- Pilih Bank --' },
+            ...banks.map((bank) => ({
+              value: bank.id.toString(),
+              label: bank.name,
+            }))
+          ]}
           required
         />
       )}

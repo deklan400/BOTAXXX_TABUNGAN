@@ -26,11 +26,15 @@ export const Select: React.FC<SelectProps> = ({
         } ${className}`}
         {...props}
       >
-        {Array.isArray(options) ? options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-slate-700">
-            {option.label}
-          </option>
-        )) : null}
+        {Array.isArray(options) && options.length > 0 ? (
+          options.map((option) => (
+            <option key={option.value} value={option.value} className="bg-slate-700">
+              {option.label}
+            </option>
+          ))
+        ) : (
+          <option value="" className="bg-slate-700">Tidak ada pilihan</option>
+        )}
       </select>
       {error && (
         <p className="mt-1 text-sm text-red-400">{error}</p>
