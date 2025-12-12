@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI, AdminStats } from '../api/adminAPI';
-import { StatCard } from '../components/cards/StatCard';
+import { AdminStatCard } from '../components/cards/AdminStatCard';
 
 export const AdminDashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,46 +41,62 @@ export const AdminDashboardPage: React.FC = () => {
 
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
+          <AdminStatCard
             title="Total Users"
             value={stats.total_users}
             icon="👥"
+            color="blue"
           />
-          <StatCard
+          <AdminStatCard
             title="Active Users"
             value={stats.active_users}
             icon="✅"
+            color="green"
           />
-          <StatCard
+          <AdminStatCard
             title="Suspended Users"
             value={stats.suspended_users}
             icon="⛔"
+            color="red"
           />
-          <StatCard
+          <AdminStatCard
             title="Admin Users"
             value={stats.admin_users}
             icon="🛡️"
+            color="purple"
           />
         </div>
       )}
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl p-6 border border-slate-700/50">
+        <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl p-6 border border-slate-700/50 hover:border-primary-500/50 transition-all">
           <h3 className="text-lg font-semibold text-white mb-2">Quick Actions</h3>
           <p className="text-gray-400 text-sm mb-4">Common admin tasks</p>
           <div className="space-y-2">
-            <a href="/admin/users" className="block text-primary-400 hover:text-primary-300 text-sm">
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
+            >
               → Manage Users
-            </a>
-            <a href="/admin/maintenance" className="block text-primary-400 hover:text-primary-300 text-sm">
+            </button>
+            <button
+              onClick={() => navigate('/admin/maintenance')}
+              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
+            >
               → Maintenance Mode
-            </a>
-            <a href="/admin/broadcast" className="block text-primary-400 hover:text-primary-300 text-sm">
+            </button>
+            <button
+              onClick={() => navigate('/admin/broadcast')}
+              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
+            >
               → Broadcast Alert
-            </a>
-            <a href="/admin/banks" className="block text-primary-400 hover:text-primary-300 text-sm">
+            </button>
+            <button
+              onClick={() => navigate('/admin/banks')}
+              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
+            >
               → Bank Management
-            </a>
+            </button>
           </div>
         </div>
 
