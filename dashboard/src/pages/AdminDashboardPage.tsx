@@ -41,27 +41,23 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Total Users"
-            value={stats.total_users.toString()}
+            value={stats.total_users}
             icon="👥"
-            trend={null}
           />
           <StatCard
             title="Active Users"
-            value={stats.active_users.toString()}
+            value={stats.active_users}
             icon="✅"
-            trend={null}
           />
           <StatCard
             title="Suspended Users"
-            value={stats.suspended_users.toString()}
+            value={stats.suspended_users}
             icon="⛔"
-            trend={null}
           />
           <StatCard
             title="Admin Users"
-            value={stats.admin_users.toString()}
+            value={stats.admin_users}
             icon="🛡️"
-            trend={null}
           />
         </div>
       )}
