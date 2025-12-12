@@ -12,6 +12,7 @@ import { BankAccountsPage } from './pages/BankAccountsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { DashboardLayout } from './components/layout/DashboardLayout';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -103,12 +104,14 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
-      {/* Admin Routes */}
+      {/* Admin Routes - Wrapped with DashboardLayout to show sidebar */}
       <Route
         path="/admin"
         element={
           <AdminRoute>
-            <AdminDashboardPage />
+            <DashboardLayout>
+              <AdminDashboardPage />
+            </DashboardLayout>
           </AdminRoute>
         }
       />
@@ -116,10 +119,12 @@ function AppRoutes() {
         path="/admin/users"
         element={
           <AdminRoute>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-white mb-4">User Management</h1>
-              <p className="text-gray-400">Coming soon...</p>
-            </div>
+            <DashboardLayout>
+              <div className="p-6">
+                <h1 className="text-3xl font-bold text-white mb-4">User Management</h1>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
+            </DashboardLayout>
           </AdminRoute>
         }
       />
@@ -127,10 +132,12 @@ function AppRoutes() {
         path="/admin/maintenance"
         element={
           <AdminRoute>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-white mb-4">Maintenance Mode</h1>
-              <p className="text-gray-400">Coming soon...</p>
-            </div>
+            <DashboardLayout>
+              <div className="p-6">
+                <h1 className="text-3xl font-bold text-white mb-4">Maintenance Mode</h1>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
+            </DashboardLayout>
           </AdminRoute>
         }
       />
@@ -138,10 +145,12 @@ function AppRoutes() {
         path="/admin/broadcast"
         element={
           <AdminRoute>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-white mb-4">Broadcast Alert</h1>
-              <p className="text-gray-400">Coming soon...</p>
-            </div>
+            <DashboardLayout>
+              <div className="p-6">
+                <h1 className="text-3xl font-bold text-white mb-4">Broadcast Alert</h1>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
+            </DashboardLayout>
           </AdminRoute>
         }
       />
@@ -149,10 +158,12 @@ function AppRoutes() {
         path="/admin/banks"
         element={
           <AdminRoute>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-white mb-4">Bank Management</h1>
-              <p className="text-gray-400">Coming soon...</p>
-            </div>
+            <DashboardLayout>
+              <div className="p-6">
+                <h1 className="text-3xl font-bold text-white mb-4">Bank Management</h1>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
+            </DashboardLayout>
           </AdminRoute>
         }
       />

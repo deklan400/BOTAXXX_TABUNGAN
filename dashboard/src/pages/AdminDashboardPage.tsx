@@ -68,38 +68,7 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl p-6 border border-slate-700/50 hover:border-primary-500/50 transition-all">
-          <h3 className="text-lg font-semibold text-white mb-2">Quick Actions</h3>
-          <p className="text-gray-400 text-sm mb-4">Common admin tasks</p>
-          <div className="space-y-2">
-            <button
-              onClick={() => navigate('/admin/users')}
-              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
-            >
-              → Manage Users
-            </button>
-            <button
-              onClick={() => navigate('/admin/maintenance')}
-              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
-            >
-              → Maintenance Mode
-            </button>
-            <button
-              onClick={() => navigate('/admin/broadcast')}
-              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
-            >
-              → Broadcast Alert
-            </button>
-            <button
-              onClick={() => navigate('/admin/banks')}
-              className="w-full text-left block text-primary-400 hover:text-primary-300 text-sm py-2 px-3 rounded-lg hover:bg-primary-500/10 transition-colors"
-            >
-              → Bank Management
-            </button>
-          </div>
-        </div>
-
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl p-6 border border-slate-700/50">
           <h3 className="text-lg font-semibold text-white mb-2">System Status</h3>
           <p className="text-gray-400 text-sm mb-4">Current system state</p>
