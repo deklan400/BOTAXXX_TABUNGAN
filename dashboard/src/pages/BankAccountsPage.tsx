@@ -45,6 +45,14 @@ export const BankAccountsPage: React.FC = () => {
     }
   };
 
+  const handleSubmit = async (data: BankAccountCreateRequest | BankAccountUpdateRequest) => {
+    if (editing) {
+      await handleUpdate(data as BankAccountUpdateRequest);
+    } else {
+      await handleCreate(data as BankAccountCreateRequest);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus rekening bank ini?')) {
       try {
@@ -144,7 +152,7 @@ export const BankAccountsPage: React.FC = () => {
               account_number: editing.account_number,
               is_primary: editing.is_primary,
             } : undefined}
-            onSubmit={editing ? handleUpdate : handleCreate}
+            onSubmit={handleSubmit}
             onCancel={() => {
               modal.close();
               setEditing(null);
