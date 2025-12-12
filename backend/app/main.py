@@ -122,3 +122,24 @@ def health():
         "database": db_status,
         "version": "1.0.0"
     }
+
+
+@app.get("/maintenance")
+def get_maintenance_status():
+    """Public endpoint to check maintenance mode status (no auth required)"""
+    import os
+    maintenance_file = "maintenance_mode.txt"
+    is_maintenance = False
+    message = ""
+    
+    if os.path.exists(maintenance_file):
+        with open(maintenance_file, "r") as f:
+            content = f.read().strip()
+            if content:
+                is_maintenance = True
+                message = content
+    
+    return {
+        "is_maintenance": is_maintenance,
+        "message": message
+    }

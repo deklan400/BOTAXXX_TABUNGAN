@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -13,7 +13,46 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { MaintenanceModePage } from './pages/MaintenanceModePage';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
+import { maintenanceAPI } from './api/maintenanceAPI';
+
+const MaintenanceCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
+  const [maintenanceStatus, setMaintenanceStatus] = useState<{ is_maintenance: boolean; message: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const status = await maintenanceAPI.getStatus();
+        setMaintenanceStatus(status);
+      } catch (error) {
+        console.error('Failed to check maintenance status:', error);
+        setMaintenanceStatus({ is_maintenance: false, message: '' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkMaintenance();
+    // Check every 30 seconds
+    const interval = setInterval(checkMaintenance, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (authLoading || loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  // If maintenance is active and user is not admin, show maintenance page
+  if (maintenanceStatus?.is_maintenance && user?.role !== 'admin') {
+    return <MaintenancePage />;
+  }
+
+  return <>{children}</>;
+};
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -22,7 +61,11 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  return user ? (
+    <MaintenanceCheck>{children}</MaintenanceCheck>
+  ) : (
+    <Navigate to="/login" />
+  );
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -131,10 +174,7 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <DashboardLayout>
-              <div className="p-6">
-                <h1 className="text-3xl font-bold text-white mb-4">Maintenance Mode</h1>
-                <p className="text-gray-400">Coming soon...</p>
-              </div>
+              <MaintenanceModePage />
             </DashboardLayout>
           </AdminRoute>
         }

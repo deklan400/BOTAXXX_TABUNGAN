@@ -7,6 +7,8 @@ export * from './LoansPage';
 export * from './TargetsPage';
 export * from './BankAccountsPage';
 export * from './AdminDashboardPage';
+export * from './MaintenanceModePage';
+export * from './MaintenancePage';
 export * from './UserManagementPage';
 export * from './ProfilePage';
 export * from './SettingsPage';
