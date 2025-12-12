@@ -6,6 +6,11 @@ from app.schemas.loan import (
     LoanPaymentBase, LoanPaymentCreateRequest
 )
 from app.schemas.target import TargetBase, TargetCreateRequest, TargetUpdateRequest
+from app.schemas.bank import (
+    BankBase, BankAccountBase, BankAccountResponse,
+    BankAccountCreateRequest, BankAccountUpdateRequest,
+    BankListResponse, BankAccountListResponse
+)
 
 __all__ = [
     "RegisterRequest", "LoginRequest", "TelegramLoginRequest", "TokenResponse",
@@ -14,4 +19,7 @@ __all__ = [
     "LoanBase", "LoanCreateRequest", "LoanUpdateRequest",
     "LoanPaymentBase", "LoanPaymentCreateRequest",
     "TargetBase", "TargetCreateRequest", "TargetUpdateRequest",
+    "BankBase", "BankAccountBase", "BankAccountResponse",
+    "BankAccountCreateRequest", "BankAccountUpdateRequest",
+    "BankListResponse", "BankAccountListResponse",
 ]

@@ -12,6 +12,7 @@ def import_models():
         from app.models.loan import Loan, LoanPayment  # noqa: F401
         from app.models.target import Target  # noqa: F401
         from app.models.user_telegram import UserTelegramID  # noqa: F401
+        from app.models.bank import Bank, BankAccount  # noqa: F401
     except ImportError as e:
         # Silently fail if models not yet available (during initial setup)
         pass

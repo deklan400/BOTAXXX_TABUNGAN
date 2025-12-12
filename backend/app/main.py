@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.routers import auth, users, overview, savings, loans, targets
+from app.routers import auth, users, overview, savings, loans, targets, banks
 from app.core.config import settings
 from app.core.logging_config import app_logger, setup_logging
 from app.middlewares.rate_limit_middleware import RateLimitMiddleware
@@ -92,6 +92,7 @@ app.include_router(overview.router, prefix="/overview", tags=["Overview"])
 app.include_router(savings.router, prefix="/savings", tags=["Savings"])
 app.include_router(loans.router, prefix="/loans", tags=["Loans"])
 app.include_router(targets.router, prefix="/targets", tags=["Targets"])
+app.include_router(banks.router, prefix="/banks", tags=["Banks"])
 
 
 @app.get("/")

@@ -8,6 +8,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { SavingsPage } from './pages/SavingsPage';
 import { LoansPage } from './pages/LoansPage';
 import { TargetsPage } from './pages/TargetsPage';
+import { BankAccountsPage } from './pages/BankAccountsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 
@@ -56,6 +57,14 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <TargetsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/banks"
+        element={
+          <PrivateRoute>
+            <BankAccountsPage />
           </PrivateRoute>
         }
       />

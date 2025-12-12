@@ -21,3 +21,4 @@ class User(Base):
     loans = relationship("Loan", back_populates="user", cascade="all, delete-orphan")
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
     telegram_ids = relationship("UserTelegramID", back_populates="user", cascade="all, delete-orphan")
+    bank_accounts = relationship("BankAccount", back_populates="user", cascade="all, delete-orphan")
