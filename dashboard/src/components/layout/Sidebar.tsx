@@ -126,9 +126,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  
+  // Check if current route is admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Don't collapse on mobile/tablet by default
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      return false;
+    }
+    // Don't collapse if on admin route
+    if (location.pathname.startsWith('/admin')) {
       return false;
     }
     const saved = localStorage.getItem('sidebarCollapsed');
@@ -141,16 +149,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
+  // Auto-expand sidebar when entering admin route
+  useEffect(() => {
+    if (isAdminRoute && isCollapsed) {
+      setIsCollapsed(false);
+    }
+  }, [isAdminRoute, isCollapsed]);
+
   useEffect(() => {
     // Only save collapse state on desktop
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+      // Don't save collapsed state if on admin route
+      if (!isAdminRoute) {
+        localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+      }
     }
     // Notify parent about collapse state change
     if (onCollapseChange) {
       onCollapseChange(isCollapsed);
     }
-  }, [isCollapsed, onCollapseChange]);
+  }, [isCollapsed, onCollapseChange, isAdminRoute]);
 
   // Reset collapse state on mobile
   useEffect(() => {
@@ -202,10 +220,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     }
   };
 
-  // Don't allow collapse on mobile/tablet
+  // Don't allow collapse on mobile/tablet or admin routes
   const handleToggleCollapse = () => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      setIsCollapsed(!isCollapsed);
+      // Prevent collapse if on admin route
+      if (isAdminRoute && isCollapsed) {
+        setIsCollapsed(false);
+      } else if (!isAdminRoute) {
+        setIsCollapsed(!isCollapsed);
+      }
     }
   };
 
@@ -246,12 +269,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           </div>
           {!isCollapsed && (
             <>
-              <button
-                onClick={handleToggleCollapse}
-                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto hidden lg:flex"
-              >
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
+              {/* Hide collapse button on admin routes */}
+              {!isAdminRoute && (
+                <button
+                  onClick={handleToggleCollapse}
+                  className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto hidden lg:flex"
+                >
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              )}
               {/* Mobile close button */}
               {onMobileClose && (
                 <button
@@ -263,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
               )}
             </>
           )}
-          {isCollapsed && (
+          {isCollapsed && !isAdminRoute && (
             <button
               onClick={handleToggleCollapse}
               className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors hidden lg:flex"
