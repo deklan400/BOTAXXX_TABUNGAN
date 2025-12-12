@@ -35,9 +35,10 @@ export const BankAccountForm: React.FC<BankAccountFormProps> = ({
   const fetchBanks = async () => {
     try {
       const data = await banksAPI.listBanks();
-      setBanks(data);
+      setBanks(Array.isArray(data) ? data : []);
     } catch (err: any) {
       setError('Failed to load banks');
+      setBanks([]); // Set empty array on error
     } finally {
       setLoadingBanks(false);
     }
@@ -78,10 +79,10 @@ export const BankAccountForm: React.FC<BankAccountFormProps> = ({
           label="Bank"
           value={formData.bank_id}
           onChange={(e) => setFormData({ ...formData, bank_id: e.target.value })}
-          options={banks.map((bank) => ({
+          options={Array.isArray(banks) ? banks.map((bank) => ({
             value: bank.id.toString(),
             label: bank.name,
-          }))}
+          })) : []}
           required
         />
       )}
