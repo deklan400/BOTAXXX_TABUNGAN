@@ -15,6 +15,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { MaintenanceModePage } from './pages/MaintenanceModePage';
 import { MaintenancePage } from './pages/MaintenancePage';
+import { BroadcastAlertPage } from './pages/BroadcastAlertPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { maintenanceAPI } from './api/maintenanceAPI';
 
@@ -184,10 +185,7 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <DashboardLayout>
-              <div className="p-6">
-                <h1 className="text-3xl font-bold text-white mb-4">Broadcast Alert</h1>
-                <p className="text-gray-400">Coming soon...</p>
-              </div>
+              <BroadcastAlertPage />
             </DashboardLayout>
           </AdminRoute>
         }
