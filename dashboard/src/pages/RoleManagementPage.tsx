@@ -71,9 +71,9 @@ export const RoleManagementPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 md:space-y-6 animate-fade-in pb-6">
+      <div className="space-y-4 md:space-y-6 animate-fade-in pb-6 w-full">
         {/* Header */}
-        <div className="px-2 md:px-0">
+        <div>
           <h1 className="text-2xl md:text-4xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent">
             Role Management
           </h1>
@@ -126,37 +126,42 @@ export const RoleManagementPage: React.FC = () => {
         </InfoCard>
 
         {/* Users Table */}
-        <InfoCard title={`👥 Daftar User (Total: ${total})`}>
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-              <p className="mt-4 text-gray-400">Memuat data...</p>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-400 text-lg">Tidak ada user ditemukan</p>
-              <p className="text-gray-500 text-sm mt-2">Coba gunakan kata kunci lain untuk pencarian</p>
-            </div>
-          ) : (
-            <>
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden w-full">
+          <div className="p-4 md:p-6 border-b border-slate-700/50">
+            <h3 className="text-lg md:text-xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              👥 Daftar User (Total: {total})
+            </h3>
+          </div>
+          <div className="p-4 md:p-6 w-full overflow-x-auto">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+                <p className="mt-4 text-gray-400">Memuat data...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <p className="text-gray-400 text-lg">Tidak ada user ditemukan</p>
+                <p className="text-gray-500 text-sm mt-2">Coba gunakan kata kunci lain untuk pencarian</p>
+              </div>
+            ) : (
+              <>
               {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto -mx-6">
-                <div className="inline-block min-w-full align-middle">
-                  <table className="min-w-full divide-y divide-slate-700">
-                    <thead className="bg-slate-800/50">
-                      <tr>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role Saat Ini</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Bergabung</th>
-                        <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
-                      </tr>
-                    </thead>
+              <div className="hidden md:block w-full overflow-x-auto">
+                <table className="w-full min-w-[900px] divide-y divide-slate-700">
+                  <thead className="bg-slate-800/50">
+                    <tr>
+                      <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
+                      <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role Saat Ini</th>
+                      <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Bergabung</th>
+                      <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                  </thead>
                     <tbody className="bg-slate-800/30 divide-y divide-slate-700/50">
                       {users.map((user) => (
                         <tr key={user.id} className="hover:bg-slate-700/40 transition-colors">
-                          <td className="px-4 md:px-6 py-4">
+                          <td className="px-4 md:px-6 py-4 min-w-[200px]">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10 md:h-12 md:w-12">
                                 {user.avatar_url ? (
@@ -189,7 +194,7 @@ export const RoleManagementPage: React.FC = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap min-w-[120px]">
                             <span
                               className={`inline-flex items-center px-2 md:px-3 py-1 md:py-1.5 text-xs font-bold rounded-full ${
                                 user.role === 'admin'
@@ -200,7 +205,7 @@ export const RoleManagementPage: React.FC = () => {
                               {user.role === 'admin' ? '👑 Admin' : '👤 User'}
                             </span>
                           </td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap min-w-[100px]">
                             {user.is_active ? (
                               <span className="inline-flex items-center px-2 md:px-3 py-1 md:py-1.5 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/50">
                                 ✓ Aktif
@@ -211,10 +216,10 @@ export const RoleManagementPage: React.FC = () => {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap min-w-[150px]">
                             <div className="text-xs md:text-sm text-gray-300">{formatDate(user.created_at)}</div>
                           </td>
-                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap min-w-[180px]">
                             <div className="flex items-center justify-center">
                               {user.role === 'admin' ? (
                                 <Button
@@ -222,14 +227,14 @@ export const RoleManagementPage: React.FC = () => {
                                   size="sm"
                                   onClick={() => handleUpdateRole(user.id, 'user')}
                                   disabled={updating === user.id}
-                                  className="min-w-[140px] md:min-w-[160px] text-xs md:text-sm bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
+                                  className="w-full max-w-[160px] text-xs md:text-sm bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
                                 >
                                   {updating === user.id ? (
-                                    <span className="flex items-center gap-1 md:gap-2">
+                                    <span className="flex items-center justify-center gap-1 md:gap-2">
                                       <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span><span className="sm:hidden">...</span>
                                     </span>
                                   ) : (
-                                    <span className="flex items-center gap-1 md:gap-2">
+                                    <span className="flex items-center justify-center gap-1 md:gap-2">
                                       ⬇️ <span className="hidden sm:inline">Turunkan ke User</span><span className="sm:hidden">User</span>
                                     </span>
                                   )}
@@ -240,14 +245,14 @@ export const RoleManagementPage: React.FC = () => {
                                   size="sm"
                                   onClick={() => handleUpdateRole(user.id, 'admin')}
                                   disabled={updating === user.id}
-                                  className="min-w-[140px] md:min-w-[160px] text-xs md:text-sm bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                                  className="w-full max-w-[160px] text-xs md:text-sm bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
                                 >
                                   {updating === user.id ? (
-                                    <span className="flex items-center gap-1 md:gap-2">
+                                    <span className="flex items-center justify-center gap-1 md:gap-2">
                                       <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span><span className="sm:hidden">...</span>
                                     </span>
                                   ) : (
-                                    <span className="flex items-center gap-1 md:gap-2">
+                                    <span className="flex items-center justify-center gap-1 md:gap-2">
                                       ⬆️ <span className="hidden sm:inline">Naikkan ke Admin</span><span className="sm:hidden">Admin</span>
                                     </span>
                                   )}
@@ -257,13 +262,12 @@ export const RoleManagementPage: React.FC = () => {
                           </td>
                         </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </tbody>
+                    </table>
               </div>
 
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
                 {users.map((user) => (
                   <div key={user.id} className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4 hover:bg-slate-700/40 transition-colors">
                     <div className="flex items-start gap-3 mb-4">
@@ -369,46 +373,47 @@ export const RoleManagementPage: React.FC = () => {
                         </Button>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
-              <div className="text-xs md:text-sm text-gray-400 text-center sm:text-left">
-                Menampilkan <span className="font-semibold text-white">{skip + 1}</span> - <span className="font-semibold text-white">{Math.min(skip + limit, total)}</span> dari <span className="font-semibold text-white">{total}</span> user
-              </div>
-              <div className="flex items-center gap-2 md:gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSkip(Math.max(0, skip - limit))}
-                  disabled={skip === 0 || loading}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
-                >
-                  ← <span className="hidden sm:inline">Sebelumnya</span><span className="sm:hidden">Prev</span>
-                </Button>
-                <div className="px-3 md:px-4 py-1.5 md:py-2 bg-slate-700/50 rounded-lg border border-slate-600">
-                  <span className="text-xs md:text-sm font-medium text-white">
-                    {currentPage} / {totalPages}
-                  </span>
+                    </div>
+                  ))}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSkip(skip + limit)}
-                  disabled={skip + limit >= total || loading}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
-                >
-                  <span className="hidden sm:inline">Selanjutnya</span><span className="sm:hidden">Next</span> →
-                </Button>
+              </>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
+                <div className="text-xs md:text-sm text-gray-400 text-center sm:text-left">
+                  Menampilkan <span className="font-semibold text-white">{skip + 1}</span> - <span className="font-semibold text-white">{Math.min(skip + limit, total)}</span> dari <span className="font-semibold text-white">{total}</span> user
+                </div>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSkip(Math.max(0, skip - limit))}
+                    disabled={skip === 0 || loading}
+                    className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+                  >
+                    ← <span className="hidden sm:inline">Sebelumnya</span><span className="sm:hidden">Prev</span>
+                  </Button>
+                  <div className="px-3 md:px-4 py-1.5 md:py-2 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <span className="text-xs md:text-sm font-medium text-white">
+                      {currentPage} / {totalPages}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSkip(skip + limit)}
+                    disabled={skip + limit >= total || loading}
+                    className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+                  >
+                    <span className="hidden sm:inline">Selanjutnya</span><span className="sm:hidden">Next</span> →
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </InfoCard>
+            )}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
