@@ -149,6 +149,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
+  // Filter menu items based on search query
+  const filterMenuItems = (items: typeof menuItems) => {
+    if (!searchQuery.trim()) return items;
+    const query = searchQuery.toLowerCase().trim();
+    return items.filter(item => 
+      item.label.toLowerCase().includes(query) ||
+      item.path.toLowerCase().includes(query)
+    );
+  };
+
+  const filterAdminMenuItems = (items: typeof adminMenuItems) => {
+    if (!searchQuery.trim()) return items;
+    const query = searchQuery.toLowerCase().trim();
+    return items.filter(item => 
+      item.label.toLowerCase().includes(query) ||
+      item.path.toLowerCase().includes(query)
+    );
+  };
+
+  const filterUtilityItems = (items: typeof utilityItems) => {
+    if (!searchQuery.trim()) return items;
+    const query = searchQuery.toLowerCase().trim();
+    return items.filter(item => 
+      item.label.toLowerCase().includes(query) ||
+      item.path.toLowerCase().includes(query)
+    );
+  };
+
+  // Highlight matching text
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === query.toLowerCase() ? (
+        <mark key={index} className="bg-yellow-400/30 text-yellow-200 rounded px-1">{part}</mark>
+      ) : part
+    );
+  };
+
   // Auto-expand sidebar when entering admin route
   useEffect(() => {
     if (isAdminRoute && isCollapsed) {
@@ -311,18 +350,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Q Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-10 py-2 bg-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* Navigation Items - Scrollable */}
       <nav className="py-4 flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#475569 #1e293b' }}>
-        {menuItems.map((item) => {
+        {filterMenuItems(menuItems).map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
           
@@ -343,7 +390,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                 }`}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-                {!isCollapsed && <span className="text-sm flex-1">{item.label}</span>}
+                {!isCollapsed && (
+                  <span className="text-sm flex-1">
+                    {searchQuery ? highlightText(item.label, searchQuery) : item.label}
+                  </span>
+                )}
                 {isActive && !isCollapsed && (
                   <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
                 )}
@@ -364,15 +415,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           );
         })}
         
+        {/* Show "No results" if search active and no matches in any menu */}
+        {searchQuery && 
+         filterMenuItems(menuItems).length === 0 && 
+         (!user || user.role !== 'admin' || filterAdminMenuItems(adminMenuItems).length === 0) && 
+         filterUtilityItems(utilityItems).length === 0 && (
+          <div className="px-4 py-8 text-center">
+            <SearchIcon className="w-12 h-12 mx-auto mb-3 text-gray-600 opacity-50" />
+            <p className="text-gray-400 text-sm">No results found</p>
+            <p className="text-gray-500 text-xs mt-1">Try a different search term</p>
+          </div>
+        )}
+        
         {/* Admin Menu Items - Only show if user is admin */}
         {user && user.role === 'admin' && (
           <>
-            {!isCollapsed && (
+            {!isCollapsed && filterAdminMenuItems(adminMenuItems).length > 0 && (
               <div className="px-4 py-2 mt-4 mb-2">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</span>
               </div>
             )}
-            {adminMenuItems.map((item) => {
+            {filterAdminMenuItems(adminMenuItems).map((item) => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
               const Icon = item.icon;
               
@@ -393,7 +456,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                     }`}
                   >
                     <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-                    {!isCollapsed && <span className="text-sm flex-1">{item.label}</span>}
+                    {!isCollapsed && (
+                      <span className="text-sm flex-1">
+                        {searchQuery ? highlightText(item.label, searchQuery) : item.label}
+                      </span>
+                    )}
                     {isActive && !isCollapsed && (
                       <div className="ml-auto w-2 h-2 bg-purple-500 rounded-full"></div>
                     )}
@@ -422,7 +489,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
       {/* Utility Items */}
       <nav className="py-2 flex-shrink-0">
-        {utilityItems.map((item) => {
+        {filterUtilityItems(utilityItems).map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
           
@@ -439,7 +506,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                   className={`w-full flex items-center px-4 py-3 mx-2 rounded-lg transition-colors text-gray-300 hover:bg-slate-700/50 hover:text-white`}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  {!isCollapsed && (
+                    <span className="text-sm">
+                      {searchQuery ? highlightText(item.label, searchQuery) : item.label}
+                    </span>
+                  )}
                 </button>
               ) : (
                 <Link
@@ -452,7 +523,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                   }`}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  {!isCollapsed && (
+                    <span className="text-sm">
+                      {searchQuery ? highlightText(item.label, searchQuery) : item.label}
+                    </span>
+                  )}
                 </Link>
               )}
               
