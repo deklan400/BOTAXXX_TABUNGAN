@@ -63,12 +63,18 @@ export const RoleManagementPage: React.FC = () => {
 
     try {
       setUpdating(userId);
-      await adminAPI.updateUserRole(userId, newRole);
-      await loadUsers();
-      showMessage('success', `Role ${user.name} berhasil diubah menjadi ${newRole}`);
+      const updatedUser = await adminAPI.updateUserRole(userId, newRole);
+      // Reload users to get updated data
+      if (searchQuery) {
+        await loadAllUsersForSearch();
+      } else {
+        await loadUsers();
+      }
+      showMessage('success', `Role ${updatedUser.name} berhasil diubah menjadi ${newRole}`);
     } catch (error: any) {
       console.error('Failed to update role:', error);
-      showMessage('error', error.response?.data?.detail || 'Gagal mengubah role user');
+      const errorMessage = error.response?.data?.detail || error.message || 'Gagal mengubah role user';
+      showMessage('error', errorMessage);
     } finally {
       setUpdating(null);
     }

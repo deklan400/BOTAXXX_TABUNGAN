@@ -100,7 +100,7 @@ export const adminAPI = {
     return response.data;
   },
 
-  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<{ message: string; user: UserDetail }> => {
+  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<UserDetail> => {
     const response = await axiosClient.put(`/admin/users/${userId}/role`, { role });
     return response.data;
   },
