@@ -71,18 +71,18 @@ export const RoleManagementPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 md:space-y-6 animate-fade-in pb-6">
         {/* Header */}
-        <div>
-          <h1 className="text-4xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent">
+        <div className="px-2 md:px-0">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent">
             Role Management
           </h1>
-          <p className="text-gray-400">Kelola role user: Naikkan user ke admin atau turunkan admin ke user</p>
+          <p className="text-sm md:text-base text-gray-400">Kelola role user: Naikkan user ke admin atau turunkan admin ke user</p>
         </div>
 
         {/* Message Display */}
         {message && (
-          <div className={`px-6 py-4 rounded-xl border ${
+          <div className={`px-4 md:px-6 py-3 md:py-4 rounded-xl border ${
             message.type === 'success' 
               ? 'bg-green-900/50 border-green-700 text-green-200' 
               : 'bg-red-900/50 border-red-700 text-red-200'
@@ -139,65 +139,180 @@ export const RoleManagementPage: React.FC = () => {
               <p className="text-gray-500 text-sm mt-2">Coba gunakan kata kunci lain untuk pencarian</p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-6">
-              <table className="w-full min-w-full divide-y divide-slate-700">
-                <thead className="bg-slate-800/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role Saat Ini</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Bergabung</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-slate-800/30 divide-y divide-slate-700/50">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-700/40 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-12 w-12">
-                            {user.avatar_url ? (
-                              <img
-                                className="h-12 w-12 rounded-full object-cover border-2 border-slate-600"
-                                src={user.avatar_url}
-                                alt={user.name}
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    const fallback = document.createElement('div');
-                                    fallback.className = 'h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600';
-                                    fallback.textContent = user.name.charAt(0).toUpperCase();
-                                    parent.appendChild(fallback);
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600">
-                                {user.name.charAt(0).toUpperCase()}
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto -mx-6">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full divide-y divide-slate-700">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role Saat Ini</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Bergabung</th>
+                        <th className="px-4 md:px-6 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-slate-800/30 divide-y divide-slate-700/50">
+                      {users.map((user) => (
+                        <tr key={user.id} className="hover:bg-slate-700/40 transition-colors">
+                          <td className="px-4 md:px-6 py-4">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 md:h-12 md:w-12">
+                                {user.avatar_url ? (
+                                  <img
+                                    className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover border-2 border-slate-600"
+                                    src={user.avatar_url}
+                                    alt={user.name}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        const fallback = document.createElement('div');
+                                        fallback.className = 'h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs md:text-sm border-2 border-slate-600';
+                                        fallback.textContent = user.name.charAt(0).toUpperCase();
+                                        parent.appendChild(fallback);
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs md:text-sm border-2 border-slate-600">
+                                    {user.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
                               </div>
+                              <div className="ml-3 md:ml-4 min-w-0 flex-1">
+                                <div className="text-sm font-semibold text-white truncate">{user.name}</div>
+                                <div className="text-xs md:text-sm text-gray-400 truncate">{user.email}</div>
+                                <div className="text-xs text-gray-500 mt-1">ID: #{user.id}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2 md:px-3 py-1 md:py-1.5 text-xs font-bold rounded-full ${
+                                user.role === 'admin'
+                                  ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20'
+                                  : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              }`}
+                            >
+                              {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                            </span>
+                          </td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            {user.is_active ? (
+                              <span className="inline-flex items-center px-2 md:px-3 py-1 md:py-1.5 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/50">
+                                ✓ Aktif
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 md:px-3 py-1 md:py-1.5 text-xs font-semibold rounded-full bg-red-500/20 text-red-300 border border-red-500/50">
+                                ⚠ Suspended
+                              </span>
                             )}
+                          </td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <div className="text-xs md:text-sm text-gray-300">{formatDate(user.created_at)}</div>
+                          </td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center justify-center">
+                              {user.role === 'admin' ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateRole(user.id, 'user')}
+                                  disabled={updating === user.id}
+                                  className="min-w-[140px] md:min-w-[160px] text-xs md:text-sm bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
+                                >
+                                  {updating === user.id ? (
+                                    <span className="flex items-center gap-1 md:gap-2">
+                                      <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span><span className="sm:hidden">...</span>
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 md:gap-2">
+                                      ⬇️ <span className="hidden sm:inline">Turunkan ke User</span><span className="sm:hidden">User</span>
+                                    </span>
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateRole(user.id, 'admin')}
+                                  disabled={updating === user.id}
+                                  className="min-w-[140px] md:min-w-[160px] text-xs md:text-sm bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                                >
+                                  {updating === user.id ? (
+                                    <span className="flex items-center gap-1 md:gap-2">
+                                      <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span><span className="sm:hidden">...</span>
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 md:gap-2">
+                                      ⬆️ <span className="hidden sm:inline">Naikkan ke Admin</span><span className="sm:hidden">Admin</span>
+                                    </span>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {users.map((user) => (
+                  <div key={user.id} className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4 hover:bg-slate-700/40 transition-colors">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="flex-shrink-0">
+                        {user.avatar_url ? (
+                          <img
+                            className="h-12 w-12 rounded-full object-cover border-2 border-slate-600"
+                            src={user.avatar_url}
+                            alt={user.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const fallback = document.createElement('div');
+                                fallback.className = 'h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600';
+                                fallback.textContent = user.name.charAt(0).toUpperCase();
+                                parent.appendChild(fallback);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600">
+                            {user.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-semibold text-white">{user.name}</div>
-                            <div className="text-sm text-gray-400">{user.email}</div>
-                            <div className="text-xs text-gray-500 mt-1">ID: #{user.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-base font-semibold text-white truncate">{user.name}</div>
+                        <div className="text-sm text-gray-400 truncate">{user.email}</div>
+                        <div className="text-xs text-gray-500 mt-1">ID: #{user.id}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Role</div>
                         <span
                           className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full ${
                             user.role === 'admin'
-                              ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20'
-                              : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border-2 border-purple-500/50'
+                              : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border-2 border-blue-500/50'
                           }`}
                         >
                           {user.role === 'admin' ? '👑 Admin' : '👤 User'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Status</div>
                         {user.is_active ? (
                           <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/50">
                             ✓ Aktif
@@ -207,77 +322,78 @@ export const RoleManagementPage: React.FC = () => {
                             ⚠ Suspended
                           </span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-300">{formatDate(user.created_at)}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center">
-                          {user.role === 'admin' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateRole(user.id, 'user')}
-                              disabled={updating === user.id}
-                              className="min-w-[160px] bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
-                            >
-                              {updating === user.id ? (
-                                <span className="flex items-center gap-2">
-                                  <span className="animate-spin">⏳</span> Mengubah...
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-2">
-                                  ⬇️ Turunkan ke User
-                                </span>
-                              )}
-                            </Button>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="text-xs text-gray-400 mb-1">Bergabung</div>
+                      <div className="text-sm text-gray-300">{formatDate(user.created_at)}</div>
+                    </div>
+
+                    <div className="w-full">
+                      {user.role === 'admin' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateRole(user.id, 'user')}
+                          disabled={updating === user.id}
+                          className="w-full bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
+                        >
+                          {updating === user.id ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="animate-spin">⏳</span> Mengubah...
+                            </span>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateRole(user.id, 'admin')}
-                              disabled={updating === user.id}
-                              className="min-w-[160px] bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
-                            >
-                              {updating === user.id ? (
-                                <span className="flex items-center gap-2">
-                                  <span className="animate-spin">⏳</span> Mengubah...
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-2">
-                                  ⬆️ Naikkan ke Admin
-                                </span>
-                              )}
-                            </Button>
+                            <span className="flex items-center justify-center gap-2">
+                              ⬇️ Turunkan ke User
+                            </span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateRole(user.id, 'admin')}
+                          disabled={updating === user.id}
+                          className="w-full bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                        >
+                          {updating === user.id ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="animate-spin">⏳</span> Mengubah...
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center gap-2">
+                              ⬆️ Naikkan ke Admin
+                            </span>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-6 pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-gray-400">
+            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
+              <div className="text-xs md:text-sm text-gray-400 text-center sm:text-left">
                 Menampilkan <span className="font-semibold text-white">{skip + 1}</span> - <span className="font-semibold text-white">{Math.min(skip + limit, total)}</span> dari <span className="font-semibold text-white">{total}</span> user
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSkip(Math.max(0, skip - limit))}
                   disabled={skip === 0 || loading}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
                 >
-                  ← Sebelumnya
+                  ← <span className="hidden sm:inline">Sebelumnya</span><span className="sm:hidden">Prev</span>
                 </Button>
-                <div className="px-4 py-2 bg-slate-700/50 rounded-lg border border-slate-600">
-                  <span className="text-sm font-medium text-white">
-                    Halaman {currentPage} dari {totalPages}
+                <div className="px-3 md:px-4 py-1.5 md:py-2 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <span className="text-xs md:text-sm font-medium text-white">
+                    {currentPage} / {totalPages}
                   </span>
                 </div>
                 <Button
@@ -285,9 +401,9 @@ export const RoleManagementPage: React.FC = () => {
                   size="sm"
                   onClick={() => setSkip(skip + limit)}
                   disabled={skip + limit >= total || loading}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
                 >
-                  Selanjutnya →
+                  <span className="hidden sm:inline">Selanjutnya</span><span className="sm:hidden">Next</span> →
                 </Button>
               </div>
             </div>
