@@ -156,125 +156,136 @@ export const RoleManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Users Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Users Table */}
+      <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl border border-slate-700/50 overflow-hidden">
         {loading ? (
-          <div className="col-span-full text-center py-12">
+          <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
             <p className="mt-4 text-gray-400">Memuat data...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-400">
             {searchQuery ? 'Tidak ada user yang ditemukan' : 'Belum ada user'}
           </div>
         ) : (
-          filteredUsers.map((user) => (
-            <div
-              key={user.id}
-              className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-xl p-6 border border-slate-700/50 hover:border-purple-500/50 transition-all group"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white mb-1 truncate">{user.name}</h3>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                  <p className="text-xs text-gray-500 mt-1">ID: #{user.id}</p>
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${
-                    user.is_active
-                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                  }`}
-                >
-                  {user.is_active ? 'Aktif' : 'Suspended'}
-                </span>
-              </div>
-
-              {/* Avatar */}
-              <div className="mb-4 flex justify-center">
-                <div className="w-20 h-20 rounded-xl flex items-center justify-center border-2 border-slate-600/50 bg-gradient-to-br from-primary-500/20 to-primary-600/20">
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.name}
-                      className="w-full h-full rounded-xl object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<span class="text-3xl font-bold text-white">${user.name.charAt(0).toUpperCase()}</span>`;
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span className="text-3xl font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Role Badge */}
-              <div className="mb-4 flex justify-center">
-                <span
-                  className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full ${
-                    user.role === 'admin'
-                      ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20'
-                      : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20'
-                  }`}
-                >
-                  {user.role === 'admin' ? '👑 Admin' : '👤 User'}
-                </span>
-              </div>
-
-              {/* Join Date */}
-              <div className="mb-4 text-center">
-                <p className="text-xs text-gray-400">Bergabung</p>
-                <p className="text-sm text-gray-300">{formatDate(user.created_at)}</p>
-              </div>
-
-              {/* Action Button */}
-              <div className="w-full">
-                {user.role === 'admin' ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUpdateRole(user.id, 'user')}
-                    disabled={updating === user.id}
-                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all"
-                  >
-                    {updating === user.id ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="animate-spin">⏳</span> Mengubah...
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-800/50 border-b border-slate-700/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Bergabung</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700/50">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-slate-700/30 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {user.avatar_url ? (
+                            <img
+                              className="h-10 w-10 rounded-full object-cover border-2 border-slate-600"
+                              src={user.avatar_url}
+                              alt={user.name}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600';
+                                  fallback.textContent = user.name.charAt(0).toUpperCase();
+                                  parent.appendChild(fallback);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm border-2 border-slate-600">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-white truncate">{user.name}</div>
+                          <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                          <div className="text-xs text-gray-500">ID: #{user.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full ${
+                          user.role === 'admin'
+                            ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border border-purple-500/50'
+                            : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border border-blue-500/50'
+                        }`}
+                      >
+                        {user.role === 'admin' ? '👑 Admin' : '👤 User'}
                       </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        ⬇️ Turunkan ke User
-                      </span>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUpdateRole(user.id, 'admin')}
-                    disabled={updating === user.id}
-                    className="w-full bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
-                  >
-                    {updating === user.id ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="animate-spin">⏳</span> Mengubah...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        ⬆️ Naikkan ke Admin
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.is_active ? (
+                        <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/50">
+                          ✓ Aktif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-red-500/20 text-red-300 border border-red-500/50">
+                          ⚠ Suspended
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <div className="text-xs text-gray-300">{formatDate(user.created_at)}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center">
+                        {user.role === 'admin' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdateRole(user.id, 'user')}
+                            disabled={updating === user.id}
+                            className="bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/50 text-blue-300 hover:text-blue-200 transition-all text-xs"
+                          >
+                            {updating === user.id ? (
+                              <span className="flex items-center gap-1">
+                                <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span>
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                ⬇️ <span className="hidden sm:inline">Turunkan</span>
+                              </span>
+                            )}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdateRole(user.id, 'admin')}
+                            disabled={updating === user.id}
+                            className="bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all text-xs"
+                          >
+                            {updating === user.id ? (
+                              <span className="flex items-center gap-1">
+                                <span className="animate-spin">⏳</span> <span className="hidden sm:inline">Mengubah...</span>
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                ⬆️ <span className="hidden sm:inline">Naikkan</span>
+                              </span>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
