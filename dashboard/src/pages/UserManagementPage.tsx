@@ -166,18 +166,19 @@ export const UserManagementPage: React.FC = () => {
             {searchQuery ? 'Tidak ada user yang ditemukan' : 'Tidak ada user'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800/50 border-b border-slate-700/50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Bergabung</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
+          <div className="overflow-x-auto -mx-4 md:-mx-6">
+            <div className="inline-block min-w-full align-middle px-4 md:px-6">
+              <table className="w-full min-w-[800px]">
+                <thead className="bg-slate-800/50 border-b border-slate-700/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[200px]">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell min-w-[180px]">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[100px]">Role</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[100px]">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell min-w-[150px]">Bergabung</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[140px]">Aksi</th>
+                  </tr>
+                </thead>
               <tbody className="divide-y divide-slate-700/50">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-700/30 transition-colors">
@@ -244,41 +245,45 @@ export const UserManagementPage: React.FC = () => {
                     <td className="px-4 py-3 hidden md:table-cell">
                       <div className="text-xs text-gray-300">{formatDate(user.created_at)}</div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 md:gap-2">
                         {user.is_active ? (
                           <Button
                             onClick={() => handleSuspend(user.id, true)}
                             variant="danger"
                             size="sm"
-                            className="text-xs"
+                            className="text-xs px-2 md:px-3"
                           >
-                            Suspend
+                            <span className="hidden sm:inline">Suspend</span>
+                            <span className="sm:hidden">⏸</span>
                           </Button>
                         ) : (
                           <Button
                             onClick={() => handleSuspend(user.id, false)}
                             variant="success"
                             size="sm"
-                            className="text-xs"
+                            className="text-xs px-2 md:px-3"
                           >
-                            Unsuspend
+                            <span className="hidden sm:inline">Unsuspend</span>
+                            <span className="sm:hidden">▶</span>
                           </Button>
                         )}
                         <Button
                           onClick={() => handleDeleteClick(user)}
                           variant="danger"
                           size="sm"
-                          className="text-xs"
+                          className="text-xs px-2 md:px-3"
                         >
-                          Hapus
+                          <span className="hidden sm:inline">Hapus</span>
+                          <span className="sm:hidden">🗑</span>
                         </Button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         )}
 
