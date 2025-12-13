@@ -71,9 +71,9 @@ export const RoleManagementPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 md:space-y-6 animate-fade-in pb-6 w-full">
+      <div className="space-y-4 md:space-y-6 animate-fade-in pb-6 w-full max-w-full">
         {/* Header */}
-        <div>
+        <div className="w-full">
           <h1 className="text-2xl md:text-4xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent">
             Role Management
           </h1>
@@ -126,13 +126,13 @@ export const RoleManagementPage: React.FC = () => {
         </InfoCard>
 
         {/* Users Table */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden w-full">
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden w-full max-w-full">
           <div className="p-4 md:p-6 border-b border-slate-700/50">
             <h3 className="text-lg md:text-xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               👥 Daftar User (Total: {total})
             </h3>
           </div>
-          <div className="p-4 md:p-6 w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto">
             {loading ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
@@ -147,8 +147,9 @@ export const RoleManagementPage: React.FC = () => {
             ) : (
               <>
               {/* Desktop Table View */}
-              <div className="hidden md:block w-full overflow-x-auto">
-                <table className="w-full min-w-[900px] divide-y divide-slate-700">
+              <div className="hidden md:block w-full overflow-x-auto -mx-4 md:-mx-6">
+                <div className="inline-block min-w-full align-middle px-4 md:px-6">
+                  <table className="w-full min-w-[900px] divide-y divide-slate-700">
                   <thead className="bg-slate-800/50">
                     <tr>
                       <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
@@ -264,7 +265,8 @@ export const RoleManagementPage: React.FC = () => {
                       ))}
                       </tbody>
                     </table>
-              </div>
+                  </div>
+                </div>
 
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-4">

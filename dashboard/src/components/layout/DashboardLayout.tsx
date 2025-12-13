@@ -29,8 +29,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       />
       <div className={`flex-1 flex flex-col relative z-10 w-full transition-all duration-300 ${isMobileSidebarOpen ? '' : isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         <Navbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 dark:text-white text-gray-900 overflow-auto transition-colors duration-300">
-          <div className="max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 dark:text-white text-gray-900 overflow-x-auto transition-colors duration-300">
+          <div className="w-full max-w-full">
             {children}
           </div>
         </main>
