@@ -58,34 +58,62 @@ async def upload_avatar(
 ):
     """Upload user avatar image"""
     try:
+        app_logger.info(f"Avatar upload request received for user {user.id}, filename: {avatar_file.filename}")
+        
         # Validate file type
-        if not avatar_file.filename or not avatar_file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+        if not avatar_file.filename:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file type. Only PNG, JPG, JPEG, GIF, WEBP allowed."
+                detail="No file provided"
+            )
+        
+        file_ext = os.path.splitext(avatar_file.filename)[1].lower()
+        if file_ext not in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid file type. Only PNG, JPG, JPEG, GIF, WEBP allowed. Got: {file_ext}"
             )
         
         # Validate file size (max 5MB)
         contents = await avatar_file.read()
-        if len(contents) > 5 * 1024 * 1024:  # 5MB
+        file_size = len(contents)
+        app_logger.info(f"File size: {file_size} bytes")
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File size too large. Maximum size is 5MB."
+            )
+        
+        if file_size == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File is empty"
             )
         
         # Save avatar file - use absolute path from project root
         project_root = pathlib.Path(__file__).parent.parent.parent.parent
         avatar_dir = project_root / "dashboard" / "public" / "avatars"
         avatar_dir.mkdir(parents=True, exist_ok=True)
+        app_logger.info(f"Avatar directory: {avatar_dir}")
         
         # Use user ID as filename
-        file_extension = os.path.splitext(avatar_file.filename)[1]
-        avatar_filename = f"user_{user.id}{file_extension}"
+        avatar_filename = f"user_{user.id}{file_ext}"
         file_path = avatar_dir / avatar_filename
+        
+        # Delete old avatar if exists
+        if file_path.exists():
+            try:
+                file_path.unlink()
+                app_logger.info(f"Deleted old avatar: {file_path}")
+            except Exception as e:
+                app_logger.warning(f"Could not delete old avatar: {e}")
         
         # Write file
         with open(str(file_path), "wb") as buffer:
             buffer.write(contents)
+        
+        app_logger.info(f"Avatar file saved to: {file_path}")
         
         # Update user record with avatar URL
         avatar_url = f"/avatars/{avatar_filename}"
@@ -93,16 +121,17 @@ async def upload_avatar(
         db.commit()
         db.refresh(user)
         
-        app_logger.info(f"Avatar uploaded for user {user.id}: {avatar_url}")
+        app_logger.info(f"Avatar uploaded successfully for user {user.id}: {avatar_url}")
         return user
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
-        app_logger.error(f"Upload avatar error for user {user.id}: {str(e)}", exc_info=True)
+        error_msg = f"Upload avatar error for user {user.id}: {str(e)}"
+        app_logger.error(error_msg, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload avatar"
+            detail=f"Failed to upload avatar: {str(e)}"
         )
 
 

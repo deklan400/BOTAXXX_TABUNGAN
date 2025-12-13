@@ -86,19 +86,30 @@ export const SettingsPage: React.FC = () => {
     try {
       // Upload avatar if selected
       if (selectedAvatarFile) {
-        await userAPI.uploadAvatar(selectedAvatarFile);
+        console.log('Uploading avatar:', selectedAvatarFile.name);
+        const updatedUser = await userAPI.uploadAvatar(selectedAvatarFile);
+        console.log('Avatar uploaded successfully:', updatedUser);
         setSelectedAvatarFile(null);
+        // Update preview with new avatar URL
+        if (updatedUser.avatar_url) {
+          setAvatarPreview(updatedUser.avatar_url);
+        }
       }
       
       // Update name if changed
-      if (profileName !== user?.name) {
-        await userAPI.updateProfile({ name: profileName });
+      if (profileName !== user?.name && profileName.trim()) {
+        console.log('Updating name:', profileName);
+        await userAPI.updateProfile({ name: profileName.trim() });
+        console.log('Name updated successfully');
       }
       
+      // Refresh user data
       await refreshUser();
       showMessage('success', 'Profile updated successfully');
     } catch (error: any) {
-      showMessage('error', error.response?.data?.detail || 'Failed to update profile');
+      console.error('Update profile error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update profile';
+      showMessage('error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -341,7 +352,10 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
 
-            <Button onClick={handleUpdateProfile} disabled={loading || (!selectedAvatarFile && profileName === user?.name)}>
+            <Button 
+              onClick={handleUpdateProfile} 
+              disabled={loading || (!selectedAvatarFile && (!profileName.trim() || profileName.trim() === user?.name))}
+            >
               {loading ? 'Updating...' : 'Update Profile'}
             </Button>
           </div>

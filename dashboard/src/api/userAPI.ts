@@ -75,11 +75,14 @@ export const userAPI = {
   uploadAvatar: async (file: File): Promise<User> => {
     const formData = new FormData();
     formData.append('avatar_file', file);
+    console.log('Uploading avatar file:', file.name, file.size, file.type);
     const response = await axiosClient.post('/users/me/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 30000, // 30 seconds timeout
     });
+    console.log('Avatar upload response:', response.data);
     return response.data;
   },
 };
