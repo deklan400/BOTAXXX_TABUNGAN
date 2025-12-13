@@ -18,6 +18,7 @@ from app.schemas.admin import (
     MaintenanceModeRequest,
     MaintenanceModeResponse,
     BroadcastAlertRequest,
+    SendAlertToUserRequest,
     BankLogoUpdateRequest,
     BankCreateRequest,
     AdminStatsResponse
@@ -213,19 +214,113 @@ async def broadcast_alert(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ):
-    """Broadcast alert/notification to all users"""
+    """Broadcast alert/notification to all active users via Telegram"""
+    from app.services.telegram_service import send_telegram_broadcast
+    from app.models.user_telegram import UserTelegramID
+    
     # Get all active users
     users = db.query(User).filter(User.is_active == True).all()
     
-    # Store broadcast message (can be sent via Telegram bot or stored for display)
-    broadcast_file = "broadcast_message.txt"
-    with open(broadcast_file, "w") as f:
+    # Collect all Telegram IDs (from both new multi-ID system and old single ID)
+    telegram_ids = []
+    for user in users:
+        # Get from new multi-ID system
+        user_telegram_ids = db.query(UserTelegramID).filter(
+            UserTelegramID.user_id == user.id
+        ).all()
+        for ut_id in user_telegram_ids:
+            if ut_id.telegram_id not in telegram_ids:
+                telegram_ids.append(ut_id.telegram_id)
+        
+        # Fallback to old single telegram_id field
+        if user.telegram_id and user.telegram_id not in telegram_ids:
+            telegram_ids.append(user.telegram_id)
+    
+    # Send broadcast via Telegram
+    result = await send_telegram_broadcast(
+        telegram_ids=telegram_ids,
+        message=request.message,
+        title=request.title
+    )
+    
+    # Store broadcast message for history
+    import pathlib
+    project_root = pathlib.Path(__file__).parent.parent.parent.parent
+    broadcast_file = project_root / "broadcast_message.txt"
+    with open(broadcast_file, "w", encoding="utf-8") as f:
         f.write(f"{request.message}|{datetime.utcnow().isoformat()}")
     
     return {
         "message": "Broadcast sent successfully",
         "users_count": len(users),
+        "telegram_sent": result["success_count"],
+        "telegram_failed": result["failed_count"],
+        "telegram_total": result["total"],
         "content": request.message
+    }
+
+
+@router.post("/send-alert")
+async def send_alert_to_user(
+    request: SendAlertToUserRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    """Send alert/notification to a specific user via Telegram"""
+    from app.services.telegram_service import send_telegram_message
+    from app.models.user_telegram import UserTelegramID
+    
+    # Get user
+    user = db.query(User).filter(User.id == request.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Get user's Telegram IDs
+    telegram_ids = []
+    
+    # Get from new multi-ID system
+    user_telegram_ids = db.query(UserTelegramID).filter(
+        UserTelegramID.user_id == user.id
+    ).all()
+    for ut_id in user_telegram_ids:
+        telegram_ids.append(ut_id.telegram_id)
+    
+    # Fallback to old single telegram_id field
+    if user.telegram_id:
+        telegram_ids.append(user.telegram_id)
+    
+    if not telegram_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User does not have a Telegram ID. Please set Telegram ID first."
+        )
+    
+    # Send message to all Telegram IDs of the user
+    success_count = 0
+    failed_count = 0
+    
+    for telegram_id in telegram_ids:
+        success = await send_telegram_message(
+            telegram_id=telegram_id,
+            message=request.message,
+            title=request.title
+        )
+        if success:
+            success_count += 1
+        else:
+            failed_count += 1
+    
+    return {
+        "message": "Alert sent successfully" if success_count > 0 else "Failed to send alert",
+        "user_id": user.id,
+        "user_name": user.name,
+        "user_email": user.email,
+        "telegram_sent": success_count,
+        "telegram_failed": failed_count,
+        "telegram_total": len(telegram_ids)
     }
 
 

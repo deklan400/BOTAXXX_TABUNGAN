@@ -40,6 +40,12 @@ export interface BroadcastAlertRequest {
   title?: string;
 }
 
+export interface SendAlertToUserRequest {
+  user_id: number;
+  message: string;
+  title?: string;
+}
+
 export interface Bank {
   id: number;
   name: string;
@@ -109,8 +115,13 @@ export const adminAPI = {
     return response.data;
   },
 
-  broadcastAlert: async (request: BroadcastAlertRequest): Promise<{ message: string; users_count: number; content: string }> => {
+  broadcastAlert: async (request: BroadcastAlertRequest): Promise<{ message: string; users_count: number; telegram_sent: number; telegram_failed: number; telegram_total: number; content: string }> => {
     const response = await axiosClient.post('/admin/broadcast', request);
+    return response.data;
+  },
+
+  sendAlertToUser: async (request: SendAlertToUserRequest): Promise<{ message: string; user_id: number; user_name: string; user_email: string; telegram_sent: number; telegram_failed: number; telegram_total: number }> => {
+    const response = await axiosClient.post('/admin/send-alert', request);
     return response.data;
   },
 

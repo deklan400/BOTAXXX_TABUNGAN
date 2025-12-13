@@ -38,6 +38,12 @@ class BroadcastAlertRequest(BaseModel):
     title: Optional[str] = Field(None, max_length=200, description="Alert title")
 
 
+class SendAlertToUserRequest(BaseModel):
+    user_id: int = Field(..., description="User ID to send alert to")
+    message: str = Field(..., min_length=1, max_length=1000, description="Alert message")
+    title: Optional[str] = Field(None, max_length=200, description="Alert title")
+
+
 class BankLogoUpdateRequest(BaseModel):
     brand_color: Optional[str] = Field(None, description="Bank brand color (hex)")
     logo_background: Optional[str] = Field(None, description="Logo background color (hex)")

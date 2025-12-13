@@ -14,7 +14,8 @@ from app.schemas.bank import (
 from app.schemas.admin import (
     UserListResponse, UserDetailResponse, UserSuspendRequest,
     MaintenanceModeRequest, MaintenanceModeResponse,
-    BroadcastAlertRequest, BankLogoUpdateRequest, AdminStatsResponse
+    BroadcastAlertRequest, SendAlertToUserRequest,
+    BankLogoUpdateRequest, AdminStatsResponse
 )
 
 __all__ = [
@@ -29,5 +30,6 @@ __all__ = [
     "BankListResponse", "BankAccountListResponse",
     "UserListResponse", "UserDetailResponse", "UserSuspendRequest",
     "MaintenanceModeRequest", "MaintenanceModeResponse",
-    "BroadcastAlertRequest", "BankLogoUpdateRequest", "AdminStatsResponse",
+    "BroadcastAlertRequest", "SendAlertToUserRequest",
+    "BankLogoUpdateRequest", "AdminStatsResponse",
 ]
