@@ -112,7 +112,7 @@ export const UserManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
@@ -166,19 +166,18 @@ export const UserManagementPage: React.FC = () => {
             {searchQuery ? 'Tidak ada user yang ditemukan' : 'Tidak ada user'}
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-4 md:-mx-6">
-            <div className="inline-block min-w-full align-middle px-4 md:px-6">
-              <table className="w-full min-w-[800px]">
-                <thead className="bg-slate-800/50 border-b border-slate-700/50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[200px]">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell min-w-[180px]">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[100px]">Role</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[100px]">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell min-w-[150px]">Bergabung</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider min-w-[140px]">Aksi</th>
-                  </tr>
-                </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-800/50 border-b border-slate-700/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">User</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Email</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Bergabung</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-slate-700/50">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-700/30 transition-colors">
@@ -282,8 +281,7 @@ export const UserManagementPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
-              </table>
-            </div>
+            </table>
           </div>
         )}
 
