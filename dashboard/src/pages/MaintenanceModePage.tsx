@@ -46,6 +46,25 @@ export const MaintenanceModePage: React.FC = () => {
     }
   };
 
+  const handleUpdateMessage = async () => {
+    if (!enabled || !message.trim()) return;
+    
+    try {
+      setSaving(true);
+      await adminAPI.setMaintenanceMode({
+        enabled: true,
+        message: message.trim(),
+      });
+      await loadMaintenanceStatus();
+      alert('Pesan berhasil diperbarui');
+    } catch (error: any) {
+      console.error('Failed to update maintenance message:', error);
+      alert(error.response?.data?.detail || 'Gagal memperbarui pesan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -120,7 +139,7 @@ export const MaintenanceModePage: React.FC = () => {
             </p>
             {message && (
               <Button
-                onClick={handleToggle}
+                onClick={handleUpdateMessage}
                 disabled={saving}
                 variant="primary"
                 className="mt-4"

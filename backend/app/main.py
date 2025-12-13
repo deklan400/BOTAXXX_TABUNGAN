@@ -128,12 +128,16 @@ def health():
 def get_maintenance_status():
     """Public endpoint to check maintenance mode status (no auth required)"""
     import os
-    maintenance_file = "maintenance_mode.txt"
+    import pathlib
+    # Use absolute path for maintenance file (same as admin endpoint)
+    project_root = pathlib.Path(__file__).parent.parent.parent
+    maintenance_file = project_root / "maintenance_mode.txt"
+    
     is_maintenance = False
     message = ""
     
-    if os.path.exists(maintenance_file):
-        with open(maintenance_file, "r") as f:
+    if maintenance_file.exists():
+        with open(maintenance_file, "r", encoding="utf-8") as f:
             content = f.read().strip()
             if content:
                 is_maintenance = True

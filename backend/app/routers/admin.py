@@ -158,14 +158,16 @@ async def get_maintenance_mode(
     admin: User = Depends(get_current_admin)
 ):
     """Get current maintenance mode status"""
-    # Store maintenance mode in a simple file or use settings
-    # For now, using a simple approach with settings
-    maintenance_file = "maintenance_mode.txt"
+    # Use absolute path for maintenance file
+    import pathlib
+    project_root = pathlib.Path(__file__).parent.parent.parent.parent
+    maintenance_file = project_root / "maintenance_mode.txt"
+    
     is_maintenance = False
     message = ""
     
-    if os.path.exists(maintenance_file):
-        with open(maintenance_file, "r") as f:
+    if maintenance_file.exists():
+        with open(maintenance_file, "r", encoding="utf-8") as f:
             content = f.read().strip()
             if content:
                 is_maintenance = True
@@ -183,19 +185,26 @@ async def set_maintenance_mode(
     admin: User = Depends(get_current_admin)
 ):
     """Enable or disable maintenance mode"""
-    maintenance_file = "maintenance_mode.txt"
+    # Use absolute path for maintenance file
+    import pathlib
+    project_root = pathlib.Path(__file__).parent.parent.parent.parent
+    maintenance_file = project_root / "maintenance_mode.txt"
     
     if request.enabled:
-        with open(maintenance_file, "w") as f:
-            f.write(request.message or "System is under maintenance. Please try again later.")
+        message = request.message or "System is under maintenance. Please try again later."
+        with open(maintenance_file, "w", encoding="utf-8") as f:
+            f.write(message)
+        return {
+            "is_maintenance": True,
+            "message": message
+        }
     else:
-        if os.path.exists(maintenance_file):
-            os.remove(maintenance_file)
-    
-    return {
-        "is_maintenance": request.enabled,
-        "message": request.message if request.enabled else ""
-    }
+        if maintenance_file.exists():
+            maintenance_file.unlink()
+        return {
+            "is_maintenance": False,
+            "message": ""
+        }
 
 
 @router.post("/broadcast")
