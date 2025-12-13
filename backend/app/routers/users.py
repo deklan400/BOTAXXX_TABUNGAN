@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+import os
+import shutil
+import pathlib
 
 from app.schemas.user import (
     UserBase, UpdateUserRequest, UpdateTelegramIDRequest,
@@ -44,6 +47,62 @@ def update_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update profile"
+        )
+
+
+@router.post("/me/avatar", response_model=UserBase)
+async def upload_avatar(
+    avatar_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Upload user avatar image"""
+    try:
+        # Validate file type
+        if not avatar_file.filename or not avatar_file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file type. Only PNG, JPG, JPEG, GIF, WEBP allowed."
+            )
+        
+        # Validate file size (max 5MB)
+        contents = await avatar_file.read()
+        if len(contents) > 5 * 1024 * 1024:  # 5MB
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size too large. Maximum size is 5MB."
+            )
+        
+        # Save avatar file - use absolute path from project root
+        project_root = pathlib.Path(__file__).parent.parent.parent.parent
+        avatar_dir = project_root / "dashboard" / "public" / "avatars"
+        avatar_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Use user ID as filename
+        file_extension = os.path.splitext(avatar_file.filename)[1]
+        avatar_filename = f"user_{user.id}{file_extension}"
+        file_path = avatar_dir / avatar_filename
+        
+        # Write file
+        with open(str(file_path), "wb") as buffer:
+            buffer.write(contents)
+        
+        # Update user record with avatar URL
+        avatar_url = f"/avatars/{avatar_filename}"
+        user.avatar_url = avatar_url
+        db.commit()
+        db.refresh(user)
+        
+        app_logger.info(f"Avatar uploaded for user {user.id}: {avatar_url}")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        app_logger.error(f"Upload avatar error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload avatar"
         )
 
 

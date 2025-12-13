@@ -71,4 +71,15 @@ export const userAPI = {
   markAllAlertsAsRead: async (): Promise<void> => {
     await axiosClient.put('/users/me/alerts/read-all');
   },
+
+  uploadAvatar: async (file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('avatar_file', file);
+    const response = await axiosClient.post('/users/me/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };

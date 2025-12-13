@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -10,9 +10,15 @@ import { userAPI, TelegramID } from '../api/userAPI';
 import axiosClient from '../api/axiosClient';
 
 export const SettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Profile Management
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState('');
@@ -37,7 +43,11 @@ export const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      setProfileName(user.name || '');
       setTelegramId(user.telegram_id || '');
+      if (user.avatar_url) {
+        setAvatarPreview(user.avatar_url);
+      }
       loadTelegramIDs();
     }
   }, [user]);
@@ -45,6 +55,53 @@ export const SettingsPage: React.FC = () => {
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showMessage('error', 'Please select an image file');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showMessage('error', 'File size too large. Maximum size is 5MB');
+        return;
+      }
+      setSelectedAvatarFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      // Upload avatar if selected
+      if (selectedAvatarFile) {
+        await userAPI.uploadAvatar(selectedAvatarFile);
+        setSelectedAvatarFile(null);
+      }
+      
+      // Update name if changed
+      if (profileName !== user?.name) {
+        await userAPI.updateProfile({ name: profileName });
+      }
+      
+      await refreshUser();
+      showMessage('success', 'Profile updated successfully');
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.detail || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadTelegramIDs = async () => {
@@ -223,6 +280,72 @@ export const SettingsPage: React.FC = () => {
             {message.text}
           </div>
         )}
+
+        {/* Profile Management */}
+        <InfoCard title="👤 Profile Management">
+          <div className="space-y-6">
+            {/* Avatar Upload */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Profile Picture</label>
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt="Profile preview"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-slate-600"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-2xl border-4 border-slate-600">
+                        {user?.name?.charAt(0).toUpperCase() || 'A'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={loading}
+                    >
+                      📷 {selectedAvatarFile ? 'Change Photo' : 'Upload Photo'}
+                    </Button>
+                    {selectedAvatarFile && (
+                      <p className="text-sm text-gray-400 mt-2">
+                        Selected: {selectedAvatarFile.name}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Supported formats: PNG, JPG, JPEG, GIF, WEBP (Max 5MB)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Name Input */}
+            <div>
+              <Input
+                label="Full Name"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+
+            <Button onClick={handleUpdateProfile} disabled={loading || (!selectedAvatarFile && profileName === user?.name)}>
+              {loading ? 'Updating...' : 'Update Profile'}
+            </Button>
+          </div>
+        </InfoCard>
 
         {/* Account Settings */}
         <InfoCard title="🔐 Account Security">

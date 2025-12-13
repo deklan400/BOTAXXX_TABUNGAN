@@ -578,18 +578,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
         {/* User Profile */}
         <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-          <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-            {user ? (
-              <span className="text-white font-semibold text-sm">
-                {getInitials(user.name)}
-              </span>
-            ) : (
-              <span className="text-white font-semibold text-sm">A</span>
-            )}
-          </div>
+          {user?.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-pink-500/30 flex-shrink-0"
+              onError={(e) => {
+                // Fallback to initial if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  const fallback = document.createElement('div');
+                  fallback.className = 'w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0';
+                  const span = document.createElement('span');
+                  span.className = 'text-white font-semibold text-sm';
+                  span.textContent = user ? getInitials(user.name) : 'A';
+                  fallback.appendChild(span);
+                  parent.insertBefore(fallback, target);
+                }
+              }}
+            />
+          ) : (
+            <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+              {user ? (
+                <span className="text-white font-semibold text-sm">
+                  {getInitials(user.name)}
+                </span>
+              ) : (
+                <span className="text-white font-semibold text-sm">A</span>
+              )}
+            </div>
+          )}
           {!isCollapsed && user && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user.name}</p>
+              <p className="text-sm font-medium dark:text-white text-gray-900 truncate">{user.name}</p>
             </div>
           )}
         </div>

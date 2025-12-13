@@ -39,8 +39,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
           <>
             <AlertBell />
             <div className="flex items-center space-x-2 md:space-x-3 px-2 md:px-4 py-2 dark:bg-gradient-to-r dark:from-slate-700/60 dark:to-slate-700/40 bg-gradient-to-r from-gray-100 to-gray-200 backdrop-blur-sm rounded-xl dark:border dark:border-slate-600/50 border border-gray-300 dark:hover:border-primary-500/50 hover:border-blue-500/50 transition-all duration-300 shadow-lg">
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 ring-2 ring-primary-500/20 text-sm md:text-base">
-                {user.name.charAt(0).toUpperCase()}
+              <div className="relative w-8 h-8 md:w-9 md:h-9">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name}
+                    className="w-full h-full rounded-full object-cover border-2 border-primary-500/30 shadow-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className={`w-full h-full bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 ring-2 ring-primary-500/20 text-sm md:text-base ${user.avatar_url ? 'absolute inset-0 hidden' : ''}`}
+                  style={{ display: user.avatar_url ? 'none' : 'flex' }}
+                >
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
               </div>
               <span className="dark:text-gray-100 text-gray-900 font-semibold text-sm md:text-base hidden sm:inline">{user.name}</span>
             </div>
