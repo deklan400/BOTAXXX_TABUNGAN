@@ -7,20 +7,39 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0f172a;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Light mode (default) */
+:root:not(.dark) {
+  color-scheme: light;
+  color: #1f2937;
+  background-color: #ffffff;
+}
+
+/* Dark mode */
+:root.dark {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0f172a;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:root:not(.dark) body {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+:root.dark body {
   background-color: #0f172a;
   color: rgba(255, 255, 255, 0.87);
 }
@@ -28,6 +47,14 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+  transition: background-color 0.3s ease;
+}
+
+:root:not(.dark) #root {
+  background-color: #ffffff;
+}
+
+:root.dark #root {
   background-color: #0f172a;
 }
 

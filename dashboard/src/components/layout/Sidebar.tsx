@@ -221,6 +221,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
     return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
+  // Initialize dark mode on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('darkMode');
+    const isDark = saved !== 'false';
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  // Update dark mode when toggle changes
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode.toString());
     if (darkMode) {
@@ -283,15 +295,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
       {/* Sidebar */}
       <div
-        className={`bg-slate-800 text-white h-screen border-r border-slate-700 transition-all duration-300 flex flex-col z-50
+        className={`dark:bg-slate-800 bg-white dark:text-white text-gray-900 h-screen dark:border-r dark:border-slate-700 border-r border-gray-200 transition-all duration-300 flex flex-col z-50
           ${isCollapsed ? 'w-20' : 'w-64'}
           ${isMobileOpen ? 'fixed inset-y-0 left-0' : 'hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex'}
         `}
       >
       {/* Top Section - Logo and Toggle */}
-      <div className="p-4 border-b border-slate-700 flex-shrink-0">
+      <div className="p-4 dark:border-b dark:border-slate-700 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 dark:bg-blue-600 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <img 
               src="/logo.png" 
               alt="Logo" 
@@ -312,7 +324,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
               {!isAdminRoute && (
                 <button
                   onClick={handleToggleCollapse}
-                  className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto hidden lg:flex"
+                  className="w-8 h-8 rounded-full dark:bg-slate-700 bg-gray-200 dark:hover:bg-slate-600 hover:bg-gray-300 flex items-center justify-center transition-colors ml-auto hidden lg:flex"
                 >
                   <ChevronRightIcon className="w-4 h-4" />
                 </button>
@@ -321,7 +333,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
               {onMobileClose && (
                 <button
                   onClick={onMobileClose}
-                  className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors ml-auto lg:hidden"
+                  className="w-8 h-8 rounded-full dark:bg-slate-700 bg-gray-200 dark:hover:bg-slate-600 hover:bg-gray-300 flex items-center justify-center transition-colors ml-auto lg:hidden"
                 >
                   <CloseIcon className="w-4 h-4" />
                 </button>
@@ -331,7 +343,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           {isCollapsed && !isAdminRoute && (
             <button
               onClick={handleToggleCollapse}
-              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors hidden lg:flex"
+              className="w-8 h-8 rounded-full dark:bg-slate-700 bg-gray-200 dark:hover:bg-slate-600 hover:bg-gray-300 flex items-center justify-center transition-colors hidden lg:flex"
             >
               <ChevronRightIcon className="w-4 h-4 rotate-180" />
             </button>
@@ -340,25 +352,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 border-b border-slate-700 flex-shrink-0">
+      <div className="p-4 dark:border-b dark:border-slate-700 border-b border-gray-200 flex-shrink-0">
         {isCollapsed ? (
-          <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-            <SearchIcon className="w-5 h-5 text-gray-400" />
+          <div className="w-10 h-10 rounded-lg dark:bg-slate-700 bg-gray-100 flex items-center justify-center">
+            <SearchIcon className="w-5 h-5 dark:text-gray-400 text-gray-600" />
           </div>
         ) : (
           <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 dark:text-gray-400 text-gray-600" />
             <input
               type="text"
               placeholder="Q Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 bg-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-10 py-2 dark:bg-slate-700 bg-gray-100 dark:text-white text-gray-900 rounded-lg dark:placeholder-gray-400 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 dark:text-gray-400 text-gray-600 hover:dark:text-white hover:text-gray-900 transition-colors"
               >
                 <CloseIcon className="w-4 h-4" />
               </button>
@@ -385,8 +397,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                 onClick={handleLinkClick}
                 className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-slate-700 text-white'
-                    : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                    ? 'dark:bg-slate-700 bg-blue-100 dark:text-white text-blue-900'
+                    : 'dark:text-gray-300 text-gray-700 dark:hover:bg-slate-700/50 hover:bg-gray-100 dark:hover:text-white hover:text-gray-900'
                 }`}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
@@ -421,9 +433,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
          (!user || user.role !== 'admin' || filterAdminMenuItems(adminMenuItems).length === 0) && 
          filterUtilityItems(utilityItems).length === 0 && (
           <div className="px-4 py-8 text-center">
-            <SearchIcon className="w-12 h-12 mx-auto mb-3 text-gray-600 opacity-50" />
-            <p className="text-gray-400 text-sm">No results found</p>
-            <p className="text-gray-500 text-xs mt-1">Try a different search term</p>
+            <SearchIcon className="w-12 h-12 mx-auto mb-3 dark:text-gray-600 text-gray-400 opacity-50" />
+            <p className="dark:text-gray-400 text-gray-600 text-sm">No results found</p>
+            <p className="dark:text-gray-500 text-gray-500 text-xs mt-1">Try a different search term</p>
           </div>
         )}
         
@@ -432,7 +444,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           <>
             {!isCollapsed && filterAdminMenuItems(adminMenuItems).length > 0 && (
               <div className="px-4 py-2 mt-4 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</span>
+                <span className="text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">Admin</span>
               </div>
             )}
             {filterAdminMenuItems(adminMenuItems).map((item) => {
@@ -451,8 +463,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                     onClick={handleLinkClick}
                     className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
-                        : 'text-gray-300 hover:bg-purple-600/10 hover:text-purple-300'
+                        ? 'dark:bg-purple-600/20 bg-purple-100 dark:text-purple-300 text-purple-900 dark:border dark:border-purple-500/30 border border-purple-300'
+                        : 'dark:text-gray-300 text-gray-700 dark:hover:bg-purple-600/10 hover:bg-purple-50 dark:hover:text-purple-300 hover:text-purple-800'
                     }`}
                   >
                     <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
@@ -485,7 +497,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </nav>
 
       {/* Separator */}
-      <div className="border-t border-slate-700 my-2 flex-shrink-0"></div>
+      <div className="dark:border-t dark:border-slate-700 border-t border-gray-200 my-2 flex-shrink-0"></div>
 
       {/* Utility Items */}
       <nav className="py-2 flex-shrink-0">
@@ -503,7 +515,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
               {item.isAction ? (
                 <button
                   onClick={() => handleItemClick(item)}
-                  className={`w-full flex items-center px-4 py-3 mx-2 rounded-lg transition-colors text-gray-300 hover:bg-slate-700/50 hover:text-white`}
+                  className={`w-full flex items-center px-4 py-3 mx-2 rounded-lg transition-colors dark:text-gray-300 text-gray-700 dark:hover:bg-slate-700/50 hover:bg-gray-100 dark:hover:text-white hover:text-gray-900`}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
                   {!isCollapsed && (
@@ -518,8 +530,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                   onClick={handleLinkClick}
                   className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-slate-700 text-white'
-                      : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                      ? 'dark:bg-slate-700 bg-blue-100 dark:text-white text-blue-900'
+                      : 'dark:text-gray-300 text-gray-700 dark:hover:bg-slate-700/50 hover:bg-gray-100 dark:hover:text-white hover:text-gray-900'
                   }`}
                 >
                   <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
@@ -545,19 +557,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       </nav>
 
       {/* Bottom Section - Dark Mode Toggle and User Profile */}
-      <div className="mt-auto p-4 border-t border-slate-700 bg-slate-800 flex-shrink-0">
+      <div className="mt-auto p-4 dark:border-t dark:border-slate-700 border-t border-gray-200 dark:bg-slate-800 bg-gray-50 flex-shrink-0 transition-colors">
         {/* Dark Mode Toggle */}
         <div className={`flex items-center justify-between mb-4 ${isCollapsed ? 'justify-center' : ''}`}>
-          {!isCollapsed && <span className="text-sm text-gray-300">Dark mode</span>}
+          {!isCollapsed && <span className="text-sm dark:text-gray-300 text-gray-700">Dark mode</span>}
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              darkMode ? 'bg-blue-600' : 'bg-slate-600'
+            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${
+              darkMode ? 'bg-blue-600' : 'bg-gray-300'
             }`}
+            aria-label="Toggle dark mode"
           >
             <div
-              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                darkMode ? 'transform translate-x-6' : ''
+              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md ${
+                darkMode ? 'transform translate-x-6' : 'translate-x-0'
               }`}
             ></div>
           </button>
