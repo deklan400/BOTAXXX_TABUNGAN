@@ -56,4 +56,19 @@ export const userAPI = {
   deleteTelegramID: async (telegramIdId: number): Promise<void> => {
     await axiosClient.delete(`/users/me/telegram-ids/${telegramIdId}`);
   },
+
+  getAlerts: async (skip: number = 0, limit: number = 50, unreadOnly: boolean = false): Promise<{ alerts: any[]; total: number; unread_count: number }> => {
+    const response = await axiosClient.get('/users/me/alerts', {
+      params: { skip, limit, unread_only: unreadOnly }
+    });
+    return response.data;
+  },
+
+  markAlertAsRead: async (alertId: number): Promise<void> => {
+    await axiosClient.put(`/users/me/alerts/${alertId}/read`);
+  },
+
+  markAllAlertsAsRead: async (): Promise<void> => {
+    await axiosClient.put('/users/me/alerts/read-all');
+  },
 };

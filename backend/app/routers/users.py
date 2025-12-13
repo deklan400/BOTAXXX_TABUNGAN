@@ -9,6 +9,7 @@ from app.schemas.user import (
 from app.utils.jwt import get_current_user
 from app.models.user import User
 from app.models.user_telegram import UserTelegramID
+from app.models.alert import Alert
 from app.db.session import get_db
 from app.core.logging_config import app_logger
 
@@ -166,4 +167,96 @@ def delete_telegram_id(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete Telegram ID"
+        )
+
+
+@router.get("/me/alerts")
+def get_alerts(
+    skip: int = 0,
+    limit: int = 50,
+    unread_only: bool = False,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Get alerts for current user"""
+    try:
+        query = db.query(Alert).filter(Alert.user_id == user.id)
+        
+        if unread_only:
+            query = query.filter(Alert.is_read == False)
+        
+        total = query.count()
+        alerts = query.order_by(Alert.created_at.desc()).offset(skip).limit(limit).all()
+        
+        return {
+            "alerts": alerts,
+            "total": total,
+            "unread_count": db.query(Alert).filter(
+                Alert.user_id == user.id,
+                Alert.is_read == False
+            ).count()
+        }
+    except Exception as e:
+        app_logger.error(f"Get alerts error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get alerts"
+        )
+
+
+@router.put("/me/alerts/{alert_id}/read")
+def mark_alert_as_read(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Mark an alert as read"""
+    try:
+        alert = db.query(Alert).filter(
+            Alert.id == alert_id,
+            Alert.user_id == user.id
+        ).first()
+        
+        if not alert:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Alert not found"
+            )
+        
+        alert.is_read = True
+        db.commit()
+        db.refresh(alert)
+        
+        return {"success": True, "alert": alert}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        app_logger.error(f"Mark alert as read error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark alert as read"
+        )
+
+
+@router.put("/me/alerts/read-all")
+def mark_all_alerts_as_read(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Mark all alerts as read for current user"""
+    try:
+        db.query(Alert).filter(
+            Alert.user_id == user.id,
+            Alert.is_read == False
+        ).update({"is_read": True})
+        db.commit()
+        
+        return {"success": True, "message": "All alerts marked as read"}
+    except Exception as e:
+        db.rollback()
+        app_logger.error(f"Mark all alerts as read error for user {user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark all alerts as read"
         )
