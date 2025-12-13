@@ -1,5 +1,69 @@
 # Langkah Update Profile Management di VPS
 
+## 🚀 QUICK START - Copy Paste Langsung
+
+```bash
+# ============================================
+# LANGKAH 1: Masuk ke VPS dan direktori aplikasi
+# ============================================
+ssh root@your-vps-ip
+cd /path/to/your/app  # SESUAIKAN PATH ANDA
+
+# ============================================
+# LANGKAH 2: Pull perubahan dari GitHub
+# ============================================
+git pull origin main
+
+# ============================================
+# LANGKAH 3: Buat folder avatars
+# ============================================
+mkdir -p dashboard/public/avatars
+chmod 755 dashboard/public/avatars
+chown -R www-data:www-data dashboard/public/avatars
+
+# ============================================
+# LANGKAH 4: Install dependencies backend
+# ============================================
+cd backend
+source venv/bin/activate  # atau: source .venv/bin/activate
+pip install -r requirements.txt
+deactivate
+cd ..
+
+# ============================================
+# LANGKAH 5: Install dependencies frontend
+# ============================================
+cd dashboard
+npm install
+npm run build
+cd ..
+
+# ============================================
+# LANGKAH 6: Database migration (jika ada)
+# ============================================
+cd backend
+source venv/bin/activate
+alembic upgrade head
+deactivate
+cd ..
+
+# ============================================
+# LANGKAH 7: Restart services
+# ============================================
+sudo systemctl restart botaxxx-backend  # SESUAIKAN NAMA SERVICE ANDA
+sudo systemctl restart nginx
+
+# ============================================
+# LANGKAH 8: Verifikasi
+# ============================================
+ls -la dashboard/public/avatars/
+echo "Update selesai! Test di browser sekarang."
+```
+
+---
+
+## 📋 LANGKAH DETAIL (Penjelasan Lengkap)
+
 ## 1. Masuk ke VPS
 ```bash
 ssh root@your-vps-ip
