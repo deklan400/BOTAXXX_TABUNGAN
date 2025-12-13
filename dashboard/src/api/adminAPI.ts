@@ -100,6 +100,11 @@ export const adminAPI = {
     return response.data;
   },
 
+  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<{ message: string; user: UserDetail }> => {
+    const response = await axiosClient.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+
   deleteUser: async (userId: number): Promise<{ message: string; deleted_user_id: number }> => {
     const response = await axiosClient.delete(`/admin/users/${userId}`);
     return response.data;

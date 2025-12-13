@@ -23,6 +23,10 @@ class UserSuspendRequest(BaseModel):
     suspend: bool = Field(..., description="True to suspend, False to unsuspend")
 
 
+class UserRoleUpdateRequest(BaseModel):
+    role: str = Field(..., description="New role: 'admin' or 'user'")
+
+
 class MaintenanceModeRequest(BaseModel):
     enabled: bool = Field(..., description="Enable or disable maintenance mode")
     message: Optional[str] = Field(None, description="Maintenance message to display")

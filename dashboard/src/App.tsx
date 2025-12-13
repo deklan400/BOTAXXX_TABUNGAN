@@ -13,6 +13,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { RoleManagementPage } from './pages/RoleManagementPage';
 import { MaintenanceModePage } from './pages/MaintenanceModePage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { BroadcastAlertPage } from './pages/BroadcastAlertPage';
@@ -168,6 +169,16 @@ function AppRoutes() {
           <AdminRoute>
             <DashboardLayout>
               <UserManagementPage />
+            </DashboardLayout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/roles"
+        element={
+          <AdminRoute>
+            <DashboardLayout>
+              <RoleManagementPage />
             </DashboardLayout>
           </AdminRoute>
         }
