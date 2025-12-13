@@ -4,6 +4,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authAPI } from '../../api/authAPI';
+import { maintenanceAPI } from '../../api/maintenanceAPI';
+import { MaintenancePage } from '../MaintenancePage';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,11 +13,28 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [maintenanceStatus, setMaintenanceStatus] = useState<{ is_maintenance: boolean; message: string } | null>(null);
+  const [checkingMaintenance, setCheckingMaintenance] = useState(true);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
+    
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      try {
+        const status = await maintenanceAPI.getStatus();
+        setMaintenanceStatus(status);
+      } catch (error) {
+        console.error('Failed to check maintenance status:', error);
+        setMaintenanceStatus({ is_maintenance: false, message: '' });
+      } finally {
+        setCheckingMaintenance(false);
+      }
+    };
+    
+    checkMaintenance();
   }, []);
 
   // Check for OAuth errors in URL
@@ -53,6 +72,18 @@ export const LoginPage: React.FC = () => {
   const handleGoogleLogin = () => {
     window.location.href = authAPI.getGoogleAuthUrl();
   };
+
+  // Show maintenance page if maintenance is active
+  // Note: Admin can still login because backend will allow it
+  if (checkingMaintenance) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (maintenanceStatus?.is_maintenance) {
+    // Show maintenance page, but admin can still try to login
+    // Backend will handle the actual blocking
+    return <MaintenancePage />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">

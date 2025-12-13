@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { maintenanceAPI } from '../../api/maintenanceAPI';
+import { MaintenancePage } from '../MaintenancePage';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -10,8 +12,27 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [maintenanceStatus, setMaintenanceStatus] = useState<{ is_maintenance: boolean; message: string } | null>(null);
+  const [checkingMaintenance, setCheckingMaintenance] = useState(true);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      try {
+        const status = await maintenanceAPI.getStatus();
+        setMaintenanceStatus(status);
+      } catch (error) {
+        console.error('Failed to check maintenance status:', error);
+        setMaintenanceStatus({ is_maintenance: false, message: '' });
+      } finally {
+        setCheckingMaintenance(false);
+      }
+    };
+    
+    checkMaintenance();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +48,15 @@ export const RegisterPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Show maintenance page if maintenance is active
+  if (checkingMaintenance) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (maintenanceStatus?.is_maintenance) {
+    return <MaintenancePage />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">
