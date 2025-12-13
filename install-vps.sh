@@ -54,13 +54,33 @@ read -p "Enter Telegram Bot Token from @BotFather (optional, can add later): " T
 
 # Ask about backup/restore
 echo ""
-print_info "=== Backup & Restore Options ==="
-read -p "Do you want to backup existing data before installation? (y/n, default: y): " BACKUP_EXISTING
-BACKUP_EXISTING=${BACKUP_EXISTING:-y}
-read -p "Do you want to restore from backup? (y/n, default: n): " RESTORE_BACKUP
-RESTORE_BACKUP=${RESTORE_BACKUP:-n}
-if [ "$RESTORE_BACKUP" = "y" ]; then
-    read -p "Enter backup file path (e.g., /path/to/backup.tar.gz): " BACKUP_FILE
+print_info "=== Migration & Restore Options ==="
+read -p "Are you migrating from another VPS? (y/n, default: n): " IS_MIGRATION
+IS_MIGRATION=${IS_MIGRATION:-n}
+if [ "$IS_MIGRATION" = "y" ]; then
+    echo ""
+    print_info "To migrate from old VPS:"
+    echo "  1. On OLD VPS, run: sudo bash export-vps-data.sh"
+    echo "  2. Download the backup file from old VPS"
+    echo "  3. Upload to this VPS: scp backup.tar.gz root@THIS_VPS:/tmp/"
+    echo "  4. After installation, run: sudo bash import-vps-data.sh /tmp/backup.tar.gz"
+    echo ""
+    read -p "Do you have backup file ready? (y/n): " HAS_BACKUP
+    if [ "$HAS_BACKUP" = "y" ]; then
+        read -p "Enter backup file path (e.g., /tmp/backup.tar.gz): " BACKUP_FILE
+        RESTORE_BACKUP="y"
+    else
+        RESTORE_BACKUP="n"
+        print_info "You can import data later using: sudo bash import-vps-data.sh /path/to/backup.tar.gz"
+    fi
+else
+    read -p "Do you want to backup existing data before installation? (y/n, default: y): " BACKUP_EXISTING
+    BACKUP_EXISTING=${BACKUP_EXISTING:-y}
+    read -p "Do you want to restore from backup? (y/n, default: n): " RESTORE_BACKUP
+    RESTORE_BACKUP=${RESTORE_BACKUP:-n}
+    if [ "$RESTORE_BACKUP" = "y" ]; then
+        read -p "Enter backup file path (e.g., /path/to/backup.tar.gz): " BACKUP_FILE
+    fi
 fi
 
 if [ -z "$DOMAIN" ]; then
@@ -111,21 +131,22 @@ if [ "$BACKUP_EXISTING" = "y" ] && [ -d "$APP_DIR" ]; then
         $APP_DIR/backend/.env \
         $APP_DIR/bot/.env \
         $APP_DIR/dashboard/.env \
+        $APP_DIR/dashboard/public/avatars/ \
         $APP_DIR/dashboard/public/banks/ \
         $APP_DIR/deployment_info.txt \
         2>/dev/null || print_warning "Some files may not exist for backup"
     
     print_success "Backup created: $BACKUP_PATH"
+    print_info "To export full data for migration, run: sudo bash export-vps-data.sh"
 fi
 
-# Restore from backup if requested
+# Restore from backup if requested (will be done after installation)
 if [ "$RESTORE_BACKUP" = "y" ] && [ ! -z "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
-    print_info "Restoring from backup: $BACKUP_FILE"
-    RESTORE_DIR="/tmp/botaxxx_restore_$$"
-    mkdir -p $RESTORE_DIR
-    tar -xzf $BACKUP_FILE -C $RESTORE_DIR
-    print_success "Backup extracted to $RESTORE_DIR"
-    print_info "You can restore files manually after installation"
+    print_info "Backup file found: $BACKUP_FILE"
+    print_info "Data will be imported after installation completes"
+    IMPORT_BACKUP_FILE="$BACKUP_FILE"
+else
+    IMPORT_BACKUP_FILE=""
 fi
 
 # Step 1: Update system
@@ -448,51 +469,82 @@ EOF
 
 chown $APP_USER:$APP_USER .env
 
-# Step 13: Restore important files from backup if available
-if [ "$RESTORE_BACKUP" = "y" ] && [ ! -z "$RESTORE_DIR" ] && [ -d "$RESTORE_DIR" ]; then
-    print_info "Step 13/15: Restoring files from backup..."
+# Step 13: Import data from backup if available
+if [ "$RESTORE_BACKUP" = "y" ] && [ ! -z "$IMPORT_BACKUP_FILE" ] && [ -f "$IMPORT_BACKUP_FILE" ]; then
+    print_info "Step 13/18: Importing data from backup..."
     
-    # Restore .env files if they exist in backup
-    if [ -f "$RESTORE_DIR$APP_DIR/backend/.env" ]; then
-        print_info "Restoring backend .env..."
-        cp $RESTORE_DIR$APP_DIR/backend/.env $APP_DIR/backend/.env.backup
-        # Merge with new DATABASE_URL if needed
-        if grep -q "DATABASE_URL=" $APP_DIR/backend/.env.backup; then
-            # Keep old DATABASE_URL if restoring
-            OLD_DB_URL=$(grep "DATABASE_URL=" $RESTORE_DIR$APP_DIR/backend/.env)
-            sed -i "s|DATABASE_URL=.*|$OLD_DB_URL|" $APP_DIR/backend/.env 2>/dev/null || true
+    # Check if import script exists
+    if [ -f "$APP_DIR/import-vps-data.sh" ]; then
+        chmod +x $APP_DIR/import-vps-data.sh
+        $APP_DIR/import-vps-data.sh "$IMPORT_BACKUP_FILE"
+        print_success "Data imported from backup"
+    else
+        print_warning "Import script not found, using manual restore..."
+        RESTORE_DIR="/tmp/botaxxx_restore_$$"
+        mkdir -p $RESTORE_DIR
+        tar -xzf "$IMPORT_BACKUP_FILE" -C $RESTORE_DIR
+        
+        # Find extracted directory
+        EXTRACTED_DIR=$(find $RESTORE_DIR -type d -mindepth 1 -maxdepth 1 | head -1)
+        
+        if [ ! -z "$EXTRACTED_DIR" ]; then
+            # Restore database
+            if [ -f "$EXTRACTED_DIR/database.dump" ]; then
+                print_warning "Database restore will overwrite existing data!"
+                read -p "Restore database? (y/n): " RESTORE_DB
+                if [ "$RESTORE_DB" = "y" ]; then
+                    sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
+                    sudo -u postgres createdb $DB_NAME
+                    sudo -u postgres pg_restore -d $DB_NAME $EXTRACTED_DIR/database.dump && \
+                        print_success "Database restored" || \
+                        print_warning "Database restore failed"
+                fi
+            fi
+            
+            # Restore .env files (merge)
+            if [ -f "$EXTRACTED_DIR/backend.env" ]; then
+                print_info "Merging backend .env..."
+                while IFS='=' read -r key value; do
+                    if [[ ! "$key" =~ ^# ]] && [[ "$key" != "DATABASE_URL" ]] && [[ -n "$key" ]]; then
+                        if grep -q "^$key=" $APP_DIR/backend/.env; then
+                            sed -i "s|^$key=.*|$key=$value|" $APP_DIR/backend/.env
+                        else
+                            echo "$key=$value" >> $APP_DIR/backend/.env
+                        fi
+                    fi
+                done < $EXTRACTED_DIR/backend.env
+            fi
+            
+            if [ -f "$EXTRACTED_DIR/bot.env" ]; then
+                print_info "Merging bot .env..."
+                while IFS='=' read -r key value; do
+                    if [[ ! "$key" =~ ^# ]] && [[ "$key" != "API_BASE_URL" ]] && [[ -n "$key" ]]; then
+                        if grep -q "^$key=" $APP_DIR/bot/.env; then
+                            sed -i "s|^$key=.*|$key=$value|" $APP_DIR/bot/.env
+                        else
+                            echo "$key=$value" >> $APP_DIR/bot/.env
+                        fi
+                    fi
+                done < $EXTRACTED_DIR/bot.env
+            fi
+            
+            # Restore avatars
+            if [ -d "$EXTRACTED_DIR/avatars" ]; then
+                mkdir -p $APP_DIR/dashboard/public/avatars
+                cp -r $EXTRACTED_DIR/avatars/* $APP_DIR/dashboard/public/avatars/ 2>/dev/null || true
+            fi
+            
+            # Restore bank logos
+            if [ -d "$EXTRACTED_DIR/banks" ]; then
+                mkdir -p $APP_DIR/dashboard/public/banks
+                cp -r $EXTRACTED_DIR/banks/* $APP_DIR/dashboard/public/banks/ 2>/dev/null || true
+            fi
+            
+            chown -R $APP_USER:$APP_USER $APP_DIR
+            rm -rf $RESTORE_DIR
+            print_success "Files restored from backup"
         fi
     fi
-    
-    if [ -f "$RESTORE_DIR$APP_DIR/bot/.env" ]; then
-        print_info "Restoring bot .env..."
-        cp $RESTORE_DIR$APP_DIR/bot/.env $APP_DIR/bot/.env
-    fi
-    
-    if [ -f "$RESTORE_DIR$APP_DIR/dashboard/.env" ]; then
-        print_info "Restoring dashboard .env..."
-        cp $RESTORE_DIR$APP_DIR/dashboard/.env $APP_DIR/dashboard/.env
-    fi
-    
-    # Restore bank logos
-    if [ -d "$RESTORE_DIR$APP_DIR/dashboard/public/banks" ]; then
-        print_info "Restoring bank logos..."
-        mkdir -p $APP_DIR/dashboard/public/banks
-        cp -r $RESTORE_DIR$APP_DIR/dashboard/public/banks/* $APP_DIR/dashboard/public/banks/ 2>/dev/null || true
-    fi
-    
-    # Restore database if backup exists
-    DB_BACKUP=$(ls -t $BACKUP_DIR/db_backup_*.sql 2>/dev/null | head -1)
-    if [ ! -z "$DB_BACKUP" ] && [ -f "$DB_BACKUP" ]; then
-        print_info "Restoring database from backup..."
-        read -p "Do you want to restore database? This will overwrite existing data! (y/n): " RESTORE_DB
-        if [ "$RESTORE_DB" = "y" ]; then
-            sudo -u postgres psql $DB_NAME < $DB_BACKUP && print_success "Database restored" || print_warning "Database restore failed"
-        fi
-    fi
-    
-    chown -R $APP_USER:$APP_USER $APP_DIR
-    print_success "Files restored from backup"
 fi
 
 # Step 14: Create systemd services
@@ -811,7 +863,21 @@ print_info "Setting permissions..."
 chown -R $APP_USER:$APP_USER $APP_DIR
 chmod -R 755 $APP_DIR
 
-# Step 17: Create backup script
+# Step 17: Copy migration scripts
+print_info "Step 17/18: Setting up migration scripts..."
+if [ -f "$APP_DIR/export-vps-data.sh" ]; then
+    cp $APP_DIR/export-vps-data.sh /usr/local/bin/botaxxx-export
+    chmod +x /usr/local/bin/botaxxx-export
+    print_success "Export script installed: /usr/local/bin/botaxxx-export"
+fi
+
+if [ -f "$APP_DIR/import-vps-data.sh" ]; then
+    cp $APP_DIR/import-vps-data.sh /usr/local/bin/botaxxx-import
+    chmod +x /usr/local/bin/botaxxx-import
+    print_success "Import script installed: /usr/local/bin/botaxxx-import"
+fi
+
+# Create backup script
 print_info "Creating backup script..."
 cat > /usr/local/bin/botaxxx-backup << 'BACKUP_SCRIPT'
 #!/bin/bash
@@ -825,25 +891,29 @@ mkdir -p $BACKUP_DIR
 
 echo "Creating backup..."
 # Backup database
-sudo -u postgres pg_dump $DB_NAME > $BACKUP_DIR/db_backup_$TIMESTAMP.sql
+sudo -u postgres pg_dump -Fc $DB_NAME > $BACKUP_DIR/db_backup_$TIMESTAMP.dump
 
 # Backup files
 tar -czf $BACKUP_DIR/files_backup_$TIMESTAMP.tar.gz \
     $APP_DIR/backend/.env \
     $APP_DIR/bot/.env \
     $APP_DIR/dashboard/.env \
+    $APP_DIR/dashboard/public/avatars/ \
     $APP_DIR/dashboard/public/banks/ \
     $APP_DIR/deployment_info.txt \
     2>/dev/null
 
 echo "Backup created:"
-echo "  Database: $BACKUP_DIR/db_backup_$TIMESTAMP.sql"
+echo "  Database: $BACKUP_DIR/db_backup_$TIMESTAMP.dump"
 echo "  Files: $BACKUP_DIR/files_backup_$TIMESTAMP.tar.gz"
+echo ""
+echo "For full migration export, run: sudo botaxxx-export"
 BACKUP_SCRIPT
 
 chmod +x /usr/local/bin/botaxxx-backup
 print_success "Backup script created: /usr/local/bin/botaxxx-backup"
 print_info "Run 'sudo botaxxx-backup' to create manual backup"
+print_info "Run 'sudo botaxxx-export' to export full data for migration"
 
 # Step 18: Save credentials
 print_info "Saving deployment information..."
