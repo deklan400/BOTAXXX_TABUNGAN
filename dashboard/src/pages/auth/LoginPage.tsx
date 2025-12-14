@@ -5,7 +5,6 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authAPI } from '../../api/authAPI';
 import { maintenanceAPI } from '../../api/maintenanceAPI';
-import { MaintenancePage } from '../MaintenancePage';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -73,17 +72,13 @@ export const LoginPage: React.FC = () => {
     window.location.href = authAPI.getGoogleAuthUrl();
   };
 
-  // Show maintenance page if maintenance is active
-  // Note: Admin can still login because backend will allow it
+  // Show loading while checking maintenance
   if (checkingMaintenance) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (maintenanceStatus?.is_maintenance) {
-    // Show maintenance page, but admin can still try to login
-    // Backend will handle the actual blocking
-    return <MaintenancePage />;
-  }
+  // Don't block login page even if maintenance is active
+  // Admin can still login, backend will handle the blocking for non-admin users
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">
@@ -150,6 +145,18 @@ export const LoginPage: React.FC = () => {
             Welcome Back
           </h2>
           
+          {maintenanceStatus?.is_maintenance && (
+            <div className={`bg-yellow-900/50 border border-yellow-700/50 text-yellow-200 px-4 py-3 rounded-xl mb-6 flex items-center gap-2 animate-slide-in transition-all duration-300`}>
+              <span className="text-xl animate-pulse">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Maintenance Mode Active</p>
+                <p className="text-xs mt-1 text-yellow-300/80">
+                  {maintenanceStatus.message || "System is under maintenance. Only administrators can login."}
+                </p>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className={`bg-red-900/50 border border-red-700/50 text-red-200 px-4 py-3 rounded-xl mb-6 flex items-center gap-2 animate-slide-in transition-all duration-300`}>
               <span className="text-xl animate-pulse">⚠️</span>
