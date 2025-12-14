@@ -32,6 +32,10 @@ from handlers.target_handler import (
     target_update_callback,
     handle_target_input,
 )
+from handlers.bank_handler import (
+    bank_menu_callback,
+    bank_list_callback,
+)
 from utils.state_manager import state_manager
 from utils.keyboards import get_main_menu_keyboard, get_reply_keyboard
 
@@ -132,6 +136,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "📋 List Target":
             from handlers.target_handler import target_list_callback
             await target_list_callback(update, context, is_keyboard_button=True)
+        elif text in ["🏦 Rekening Bank", "Rekening Bank"]:
+            from handlers.bank_handler import bank_menu_callback
+            await bank_menu_callback(update, context, is_keyboard_button=True)
         elif text in ["🏠 Menu Utama", "Menu Utama"]:
             await update.message.reply_text(
                 "Select an option:",
@@ -176,6 +183,10 @@ def main():
     application.add_handler(CallbackQueryHandler(target_list_callback, pattern="^target_list$"))
     application.add_handler(CallbackQueryHandler(target_add_callback, pattern="^target_add$"))
     application.add_handler(CallbackQueryHandler(target_update_callback, pattern="^target_update$"))
+
+    # Bank handlers
+    application.add_handler(CallbackQueryHandler(bank_menu_callback, pattern="^menu_bank$"))
+    application.add_handler(CallbackQueryHandler(bank_list_callback, pattern="^bank_list$"))
 
     # Cancel handler
     application.add_handler(CallbackQueryHandler(cancel_callback, pattern="^cancel$"))

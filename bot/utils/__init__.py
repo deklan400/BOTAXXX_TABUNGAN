@@ -4,6 +4,7 @@ from utils.keyboards import (
     get_tabungan_menu_keyboard,
     get_pinjaman_menu_keyboard,
     get_target_menu_keyboard,
+    get_bank_menu_keyboard,
     get_cancel_keyboard,
 )
 from utils.formatter import (
@@ -20,6 +21,7 @@ __all__ = [
     "get_tabungan_menu_keyboard",
     "get_pinjaman_menu_keyboard",
     "get_target_menu_keyboard",
+    "get_bank_menu_keyboard",
     "get_cancel_keyboard",
     "format_rupiah",
     "format_savings",

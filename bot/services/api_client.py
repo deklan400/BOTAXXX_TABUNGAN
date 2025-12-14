@@ -168,3 +168,14 @@ class APIClient:
             )
             response.raise_for_status()
             return response.json()
+
+    async def list_bank_accounts(self, skip: int = 0, limit: int = 100) -> list:
+        """List bank accounts"""
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(
+                f"{self.base_url}/banks/accounts?skip={skip}&limit={limit}",
+                headers=self._get_headers(),
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("bank_accounts", [])

@@ -11,6 +11,7 @@ def get_main_menu_keyboard():
         ],
         [
             InlineKeyboardButton("🎯 Target", callback_data="menu_target"),
+            InlineKeyboardButton("🏦 Rekening Bank", callback_data="menu_bank"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -49,6 +50,15 @@ def get_target_menu_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
+def get_bank_menu_keyboard():
+    """Get rekening bank submenu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("📋 List Rekening Bank", callback_data="bank_list")],
+        [InlineKeyboardButton("🔙 Back", callback_data="menu_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
 def get_cancel_keyboard():
     """Get cancel keyboard"""
     keyboard = [[InlineKeyboardButton("❌ Cancel", callback_data="cancel")]]
@@ -61,7 +71,8 @@ def get_reply_keyboard():
     keyboard = [
         [KeyboardButton("💰 Saldo"), KeyboardButton("📂 Tabungan")],
         [KeyboardButton("📑 Pinjaman"), KeyboardButton("🎯 Target")],
-        [KeyboardButton("📋 List Tabungan"), KeyboardButton("📋 List Pinjaman")],
-        [KeyboardButton("📋 List Target"), KeyboardButton("🏠 Menu Utama")],
+        [KeyboardButton("🏦 Rekening Bank"), KeyboardButton("📋 List Tabungan")],
+        [KeyboardButton("📋 List Pinjaman"), KeyboardButton("📋 List Target")],
+        [KeyboardButton("🏠 Menu Utama")],
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
