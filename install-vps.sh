@@ -1211,3 +1211,152 @@ if [ -z "$SSL_EMAIL" ]; then
 fi
 echo ""
 
+# ============================================
+# UTILITY FUNCTIONS (can be called separately)
+# ============================================
+
+update_vps() {
+    # Quick update function
+    print_info "=== Quick Update VPS ==="
+    cd $APP_DIR
+    git pull origin main
+    chown -R $APP_USER:$APP_USER $APP_DIR
+    
+    # Update backend
+    cd $APP_DIR/backend
+    source venv/bin/activate
+    pip install -r requirements.txt --quiet
+    alembic upgrade head
+    
+    # Update frontend
+    cd $APP_DIR/dashboard
+    npm install --silent
+    npm run build
+    chown -R $APP_USER:$APP_USER $APP_DIR/dashboard/dist
+    
+    # Update bot
+    cd $APP_DIR/bot
+    source venv/bin/activate
+    pip install -r requirements.txt --quiet
+    
+    # Restart services
+    systemctl restart botaxxx-backend
+    systemctl restart botaxxx-bot
+    systemctl reload nginx
+    
+    print_success "Update completed!"
+}
+
+rebuild_frontend() {
+    # Rebuild frontend (useful for logo issues)
+    print_info "=== Rebuild Frontend ==="
+    cd $APP_DIR/dashboard
+    npm install
+    npm run build
+    chown -R $APP_USER:$APP_USER $APP_DIR/dashboard/dist
+    systemctl reload nginx
+    print_success "Frontend rebuilt successfully!"
+}
+
+fix_nginx_banks() {
+    # Fix Nginx config for bank logos
+    print_info "=== Fix Nginx Config for Bank Logos ==="
+    NGINX_CONFIG="/etc/nginx/sites-available/botaxxx"
+    BACKUP_CONFIG="/etc/nginx/sites-available/botaxxx.backup.$(date +%Y%m%d_%H%M%S)"
+    
+    if [ ! -f "$NGINX_CONFIG" ]; then
+        print_error "Nginx config not found: $NGINX_CONFIG"
+        return 1
+    fi
+    
+    # Backup config
+    cp $NGINX_CONFIG $BACKUP_CONFIG
+    
+    # Check if fix already applied
+    if grep -q "location ~ ^/banks/.*\.(png|jpg|jpeg|svg|gif|webp)" "$NGINX_CONFIG"; then
+        print_info "Nginx config already has bank logos location block"
+        return 0
+    fi
+    
+    # Apply fix using awk
+    TEMP_CONFIG=$(mktemp)
+    awk '
+    /^[[:space:]]*location[[:space:]]+~[[:space:]]+\^\/\(docs\|openapi\.json\|health\|auth\|users\|overview\|savings\|loans\|targets\|banks\)/ {
+        print "    # Serve static bank logos (must be before API routes)"
+        print "    location ~ ^/banks/.*\\.(png|jpg|jpeg|svg|gif|webp)$ {"
+        print "        root /var/www/botaxxx/dashboard/dist;"
+        print "        expires 30d;"
+        print "        add_header Cache-Control \"public, immutable\";"
+        print "    }"
+        print ""
+        print "    # Backend API routes (specific paths only)"
+        gsub(/\|banks\)/, "|banks/banks|banks/accounts)")
+        print
+        next
+    }
+    { print }
+    ' "$NGINX_CONFIG" > "$TEMP_CONFIG"
+    
+    mv "$TEMP_CONFIG" "$NGINX_CONFIG"
+    
+    if nginx -t; then
+        systemctl reload nginx
+        print_success "Nginx config fixed and reloaded"
+    else
+        print_error "Nginx config test failed, restoring backup"
+        cp $BACKUP_CONFIG $NGINX_CONFIG
+        return 1
+    fi
+}
+
+fix_logos() {
+    # Fix bank logos (rebuild and verify)
+    print_info "=== Fix Bank Logos ==="
+    PUBLIC_BANKS="$APP_DIR/dashboard/public/banks"
+    DIST_BANKS="$APP_DIR/dashboard/dist/banks"
+    
+    if [ ! -d "$PUBLIC_BANKS" ]; then
+        print_error "Folder $PUBLIC_BANKS tidak ada!"
+        return 1
+    fi
+    
+    LOGO_COUNT=$(find $PUBLIC_BANKS -name "*.png" 2>/dev/null | wc -l)
+    if [ "$LOGO_COUNT" -eq 0 ]; then
+        print_warning "Tidak ada file PNG di $PUBLIC_BANKS"
+    else
+        print_success "Found $LOGO_COUNT logo files"
+    fi
+    
+    # Rebuild frontend
+    rebuild_frontend
+    
+    # Verify logos in dist
+    if [ ! -d "$DIST_BANKS" ]; then
+        mkdir -p $DIST_BANKS
+    fi
+    
+    DIST_LOGO_COUNT=$(find $DIST_BANKS -name "*.png" 2>/dev/null | wc -l)
+    if [ "$DIST_LOGO_COUNT" -eq 0 ]; then
+        print_warning "Logo tidak ter-copy ke dist, copying manually..."
+        cp -r $PUBLIC_BANKS/* $DIST_BANKS/ 2>/dev/null || true
+    fi
+    
+    chown -R $APP_USER:$APP_USER $APP_DIR/dashboard/dist
+    print_success "Bank logos fixed!"
+}
+
+# Check if script is called with function name
+if [ "$1" = "update" ]; then
+    update_vps
+    exit 0
+elif [ "$1" = "rebuild-frontend" ]; then
+    rebuild_frontend
+    exit 0
+elif [ "$1" = "fix-nginx" ]; then
+    fix_nginx_banks
+    exit 0
+elif [ "$1" = "fix-logos" ]; then
+    fix_logos
+    exit 0
+fi
+
