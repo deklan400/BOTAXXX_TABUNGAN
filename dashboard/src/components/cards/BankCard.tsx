@@ -37,11 +37,14 @@ export const BankCard: React.FC<BankCardProps> = ({
     ? (account.account_number || '')
     : maskAccountNumber(account.account_number || '');
 
+  const brandColor = getBrandColor();
+  
   return (
     <div
-      className="group relative bg-gradient-to-br from-slate-800/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden hover:shadow-primary-500/20 hover:shadow-2xl hover:border-primary-500/50 hover:-translate-y-1 transition-all duration-500"
+      className="group relative backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-500"
       style={{
-        background: `linear-gradient(135deg, ${getBrandColor()}15 0%, ${getBrandColor()}05 50%, transparent 100%)`,
+        background: `linear-gradient(135deg, ${brandColor}20 0%, ${brandColor}10 30%, ${brandColor}05 60%, rgba(15, 23, 42, 0.9) 100%)`,
+        borderColor: `${brandColor}40`,
       }}
     >
       {/* Card Content */}
@@ -143,7 +146,7 @@ export const BankCard: React.FC<BankCardProps> = ({
       <div
         className="absolute -inset-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
         style={{
-          background: `linear-gradient(90deg, ${getBrandColor()}40, ${getBrandColor()}20, ${getBrandColor()}40)`,
+          background: `linear-gradient(90deg, ${brandColor}40, ${brandColor}20, ${brandColor}40)`,
         }}
       />
     </div>

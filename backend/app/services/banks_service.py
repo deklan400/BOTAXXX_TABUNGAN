@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 from typing import List
 from app.models.bank import Bank, BankAccount
@@ -66,7 +66,9 @@ def get_bank_accounts(
     limit: int = 100
 ) -> List[BankAccount]:
     """Get all bank accounts for a user"""
-    return db.query(BankAccount).filter(
+    return db.query(BankAccount).options(
+        joinedload(BankAccount.bank)
+    ).filter(
         BankAccount.user_id == user_id,
         BankAccount.is_active == True
     ).order_by(
@@ -81,7 +83,9 @@ def get_bank_account_by_id(
     user_id: int
 ) -> BankAccount:
     """Get a specific bank account"""
-    bank_account = db.query(BankAccount).filter(
+    bank_account = db.query(BankAccount).options(
+        joinedload(BankAccount.bank)
+    ).filter(
         BankAccount.id == bank_account_id,
         BankAccount.user_id == user_id
     ).first()
